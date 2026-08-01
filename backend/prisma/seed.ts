@@ -40,11 +40,11 @@ async function main(): Promise<void> {
   });
 
   const cashAccount = await prisma.cashAccount.create({
-    data: { companyId: company.id, name: 'Основная касса', isDefault: true, balance: '12400000' },
+    data: { companyId: company.id, name: 'Asosiy kassa', isDefault: true, balance: '12400000' },
   });
 
   await prisma.expenseCategory.createMany({
-    data: ['Аренда', 'Коммунальные услуги', 'Материалы', 'Транспорт', 'Прочее'].map((name) => ({
+    data: ['Ijara', "Kommunal to'lovlar", 'Materiallar', 'Transport', 'Boshqa xarajatlar'].map((name) => ({
       companyId: company.id,
       name,
       isSystem: true,
@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   });
 
   const operations = await Promise.all(
-    ['Раскрой', 'Пошив', 'Затяжка', 'Упаковка'].map((name, i) =>
+    ['Bichish', 'Tikish', 'Qolipga tortish', 'Qadoqlash'].map((name, i) =>
       prisma.operation.create({
         data: { companyId: company.id, name, sortOrder: i },
       }),
@@ -61,12 +61,12 @@ async function main(): Promise<void> {
 
   const products = await Promise.all(
     [
-      { sku: 'SP-12', name: 'Кроссовки «Спорт-12»', salePrice: '450000', costPrice: '280000', stockQuantity: 88 },
-      { sku: 'ZM-04', name: 'Ботинки «Зима-4»', salePrice: '620000', costPrice: '390000', stockQuantity: 42 },
-      { sku: 'KL-01', name: 'Туфли «Классика»', salePrice: '520000', costPrice: '310000', stockQuantity: 6 },
+      { sku: 'SP-12', name: 'Krossovka «Sport-12»', salePrice: '450000', costPrice: '280000', stockQuantity: 88 },
+      { sku: 'ZM-04', name: 'Botinka «Qish-4»', salePrice: '620000', costPrice: '390000', stockQuantity: 42 },
+      { sku: 'KL-01', name: 'Tufli «Klassika»', salePrice: '520000', costPrice: '310000', stockQuantity: 6 },
     ].map((p) =>
       prisma.product.create({
-        data: { companyId: company.id, ...p, category: 'Обувь', minStockLevel: 10 },
+        data: { companyId: company.id, ...p, category: 'Poyabzal', minStockLevel: 10 },
       }),
     ),
   );
@@ -80,7 +80,7 @@ async function main(): Promise<void> {
       type: 'PRODUCTION_IN' as const,
       quantity: p.stockQuantity,
       balanceAfter: p.stockQuantity,
-      note: 'Начальный остаток',
+      note: "Boshlang'ich qoldiq",
     })),
   });
 
@@ -105,9 +105,9 @@ async function main(): Promise<void> {
 
   const employees = await Promise.all(
     [
-      { fullName: 'Азиз Каримов', position: 'Затяжчик', defaultOperationId: operations[2].id },
-      { fullName: 'Дилшод Рахимов', position: 'Швея', defaultOperationId: operations[1].id },
-      { fullName: 'Санжар Усмонов', position: 'Раскройщик', defaultOperationId: operations[0].id },
+      { fullName: 'Aziz Karimov', position: 'Qolipga tortuvchi', defaultOperationId: operations[2].id },
+      { fullName: 'Dilshod Rahimov', position: 'Tikuvchi', defaultOperationId: operations[1].id },
+      { fullName: 'Sanjar Usmonov', position: 'Bichuvchi', defaultOperationId: operations[0].id },
     ].map((e) =>
       prisma.employee.create({
         data: { companyId: company.id, ...e, hiredAt: new Date('2025-03-01') },

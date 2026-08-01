@@ -9,6 +9,11 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { TenantInterceptor } from './common/guards/tenant.guard';
 import { validateEnv } from './config/env';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { OperationsModule } from './modules/operations/operations.module';
+import { PieceRatesModule } from './modules/piece-rates/piece-rates.module';
+import { ProductsModule } from './modules/products/products.module';
+import { StockModule } from './modules/stock/stock.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -18,6 +23,11 @@ import { PrismaModule } from './prisma/prisma.module';
     ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
+    EmployeesModule,
+    OperationsModule,
+    ProductsModule,
+    StockModule,
+    PieceRatesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

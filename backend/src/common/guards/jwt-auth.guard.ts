@@ -1,4 +1,4 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
@@ -29,12 +29,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Сверка по name, а не instanceof: не тянем jsonwebtoken в зависимости
     // ради одной проверки, и не ломаемся при дублировании его в node_modules.
     if ((info as Error | undefined)?.name === 'TokenExpiredError') {
-      throw new AppException(401, 'TOKEN_EXPIRED', 'Срок действия сессии истёк');
+      throw new AppException(401, 'TOKEN_EXPIRED', 'error.token_expired');
     }
 
-    throw new UnauthorizedException({
-      code: 'UNAUTHORIZED',
-      message: 'Требуется авторизация',
-    });
+    throw new AppException(401, 'UNAUTHORIZED', 'error.unauthorized');
   }
 }

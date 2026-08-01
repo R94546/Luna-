@@ -14,25 +14,23 @@ const phoneSchema = z
     if (v.length === 9) return `+998${v}`;
     return v;
   })
-  .refine((v) => /^\+998\d{9}$/.test(v), {
-    message: 'Введите номер в формате +998 XX XXX XX XX',
-  });
+  .refine((v) => /^\+998\d{9}$/.test(v), { message: 'validation.phone_format' });
 
 const passwordSchema = z
   .string()
-  .min(6, 'Пароль должен быть не короче 6 символов')
-  .max(72, 'Пароль слишком длинный');
+  .min(6, 'validation.password_min')
+  .max(72, 'validation.password_max');
 
 export const registerSchema = z.object({
-  companyName: z.string().trim().min(2, 'Укажите название цеха').max(160),
-  fullName: z.string().trim().min(2, 'Укажите ваше имя').max(160),
+  companyName: z.string().trim().min(2, 'validation.company_name').max(160),
+  fullName: z.string().trim().min(2, 'validation.full_name').max(160),
   phone: phoneSchema,
   password: passwordSchema,
 });
 
 export const loginSchema = z.object({
   phone: phoneSchema,
-  password: z.string().min(1, 'Введите пароль'),
+  password: z.string().min(1, 'validation.password_required'),
 });
 
 export const refreshSchema = z.object({

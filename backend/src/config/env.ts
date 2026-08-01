@@ -18,6 +18,7 @@ const envSchema = z.object({
   JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
   TELEGRAM_BOT_TOKEN: z.string().default(''),
+  TELEGRAM_BOT_USERNAME: z.string().default('luna_workshop_bot'),
   TELEGRAM_WEBHOOK_SECRET: z.string().default(''),
   TELEGRAM_WEBHOOK_URL: z.string().default(''),
 });

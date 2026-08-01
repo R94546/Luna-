@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+import { Lang, parseLang, t } from '../i18n/messages';
 
 interface ErrorBody {
   statusCode: number;
@@ -18,10 +19,14 @@ interface ErrorBody {
   path: string;
 }
 
+/** Ключи словаря выглядят как `error.foo` / `validation.bar`. */
+const I18N_KEY = /^(error|validation)\.[a-z_]+$/;
+
 /**
  * Единый формат ошибок для всего API.
- * Flutter разбирает один контракт вместо трёх разных форм ответа
- * (Nest-исключения, ошибки Prisma, необработанные падения).
+ *
+ * Здесь же происходит перевод: сервисы бросают ключи, а язык известен
+ * только на границе HTTP — из заголовка Accept-Language.
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -32,7 +37,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const body = this.toErrorBody(exception, request.url);
+    const lang = parseLang(request.headers['accept-language']);
+    const body = this.toErrorBody(exception, request.url, lang);
 
     if (body.statusCode >= 500) {
       this.logger.error(
@@ -44,7 +50,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(body.statusCode).json(body);
   }
 
-  private toErrorBody(exception: unknown, path: string): ErrorBody {
+  private toErrorBody(exception: unknown, path: string, lang: Lang): ErrorBody {
     const timestamp = new Date().toISOString();
 
     if (exception instanceof HttpException) {
@@ -53,13 +59,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       if (typeof payload === 'object' && payload !== null) {
         const p = payload as Record<string, unknown>;
+
         return {
           statusCode: status,
           code: (p.code as string) ?? this.defaultCode(status),
-          message: Array.isArray(p.message)
-            ? (p.message as string[]).join('; ')
-            : ((p.message as string) ?? exception.message),
-          details: p.details,
+          message: this.resolveMessage(p, exception.message, status, lang),
+          details: this.translateDetails(p.details, lang),
           timestamp,
           path,
         };
@@ -75,7 +80,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      return { ...this.fromPrisma(exception), timestamp, path };
+      return { ...this.fromPrisma(exception, lang), timestamp, path };
     }
 
     // Всё неопознанное — 500 без подробностей наружу: текст ошибки может
@@ -83,14 +88,59 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       code: 'INTERNAL_ERROR',
-      message: 'Внутренняя ошибка сервера',
+      message: t(lang, 'error.internal'),
       timestamp,
       path,
     };
   }
 
+  private resolveMessage(
+    payload: Record<string, unknown>,
+    fallback: string,
+    status: number,
+    lang: Lang,
+  ): string {
+    if (typeof payload.messageKey === 'string') {
+      return t(lang, payload.messageKey, payload.params as Record<string, unknown> | undefined);
+    }
+
+    // Исключения самого Nest (ThrottlerException, UnauthorizedException и т.п.)
+    // ключей не знают — подставляем перевод по HTTP-статусу.
+    const byStatus: Record<number, string> = {
+      401: 'error.unauthorized',
+      403: 'error.forbidden_role',
+      404: 'error.not_found',
+      429: 'error.too_many_requests',
+    };
+
+    if (byStatus[status]) return t(lang, byStatus[status], { entity: '' }).trim();
+
+    const message = payload.message;
+    if (Array.isArray(message)) return message.join('; ');
+
+    return (message as string) ?? fallback;
+  }
+
+  /** Переводит значения в details.fields — туда ZodValidationPipe кладёт ключи. */
+  private translateDetails(details: unknown, lang: Lang): unknown {
+    if (!details || typeof details !== 'object') return details;
+
+    const d = details as Record<string, unknown>;
+    if (!d.fields || typeof d.fields !== 'object') return details;
+
+    const fields = Object.fromEntries(
+      Object.entries(d.fields as Record<string, string>).map(([field, value]) => [
+        field,
+        I18N_KEY.test(value) ? t(lang, value) : value,
+      ]),
+    );
+
+    return { ...d, fields };
+  }
+
   private fromPrisma(
     e: Prisma.PrismaClientKnownRequestError,
+    lang: Lang,
   ): Pick<ErrorBody, 'statusCode' | 'code' | 'message' | 'details'> {
     const target = (e.meta?.target as string[] | undefined)?.join(', ');
 
@@ -100,8 +150,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           statusCode: 409,
           code: 'DUPLICATE_VALUE',
           message: target
-            ? `Запись с таким значением поля «${target}» уже существует`
-            : 'Такая запись уже существует',
+            ? t(lang, 'error.duplicate', { field: target })
+            : t(lang, 'error.duplicate_generic'),
           details: { fields: e.meta?.target },
         };
 
@@ -109,14 +159,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return {
           statusCode: 404,
           code: 'NOT_FOUND',
-          message: 'Запись не найдена',
+          message: t(lang, 'error.not_found', { entity: '' }).trim(),
         };
 
       case 'P2003': // нарушение внешнего ключа
         return {
           statusCode: 422,
           code: 'RELATED_RECORD_MISSING',
-          message: 'Связанная запись не существует',
+          message: t(lang, 'error.related_missing'),
           details: { field: e.meta?.field_name },
         };
 
@@ -124,7 +174,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return {
           statusCode: 500,
           code: 'DATABASE_ERROR',
-          message: 'Ошибка базы данных',
+          message: t(lang, 'error.database'),
         };
     }
   }

@@ -116,13 +116,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       if (CREATE_OPS.has(params.action)) {
         params.args ??= {};
 
+        // companyId из контекста ставится ПОСЛЕ данных вызывающего кода:
+        // даже если сервис передаст чужой идентификатор, записан будет свой.
         if (params.action === 'createMany') {
           const rows = params.args.data;
           params.args.data = Array.isArray(rows)
-            ? rows.map((row: Record<string, unknown>) => ({ companyId, ...row }))
-            : { companyId, ...rows };
+            ? rows.map((row: Record<string, unknown>) => ({ ...row, companyId }))
+            : { ...rows, companyId };
         } else {
-          params.args.data = { companyId, ...params.args.data };
+          params.args.data = { ...params.args.data, companyId };
         }
 
         return next(params);
@@ -131,7 +133,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       if (params.action === 'upsert') {
         params.args ??= {};
         params.args.where = { ...params.args.where, companyId };
-        params.args.create = { companyId, ...params.args.create };
+        params.args.create = { ...params.args.create, companyId };
         return next(params);
       }
 

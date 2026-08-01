@@ -21,9 +21,9 @@ export class ZodValidationPipe implements PipeTransform {
         fields[issue.path.join('.') || '_'] = issue.message;
       }
 
-      throw new AppException(400, 'VALIDATION_ERROR', 'Проверьте правильность заполнения полей', {
-        fields,
-      });
+      // В fields лежат КЛЮЧИ словаря — переводит их AllExceptionsFilter,
+      // который единственный знает язык из Accept-Language.
+      throw new AppException(400, 'VALIDATION_ERROR', 'error.validation', undefined, { fields });
     }
 
     return result.data;

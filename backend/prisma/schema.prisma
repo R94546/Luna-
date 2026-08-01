@@ -128,8 +128,11 @@ model Company {
   status             CompanyStatus @default(ACTIVE)
   subscriptionEndsAt DateTime?     @map("subscription_ends_at") @db.Timestamptz(3)
 
-  // Настройки бизнес-логики
-  workLogAutoApprove Boolean @default(false) @map("work_log_auto_approve")
+  // Настройки бизнес-логики.
+  // Автоподтверждение включено по умолчанию: в небольшом цехе владелец
+  // доверяет рабочим, а обязательное подтверждение каждой записи быстро
+  // превращается в необработанную очередь и зарплату «по памяти».
+  workLogAutoApprove Boolean @default(true) @map("work_log_auto_approve")
   defaultMarginPct   Decimal @default(30) @map("default_margin_pct") @db.Decimal(5, 2)
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)

@@ -8,9 +8,18 @@ import { AppException, Errors } from '../../common/filters/app.exception';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ChangePasswordDto, JwtPayload, LoginDto, RegisterDto, TokenPair } from './dto/auth.dto';
 
-/** Стартовые данные новой компании: без них первый экран приложения пустой. */
-const SEED_EXPENSE_CATEGORIES = ['Аренда', 'Коммунальные услуги', 'Материалы', 'Транспорт', 'Прочее'];
-const SEED_OPERATIONS = ['Раскрой', 'Пошив', 'Затяжка', 'Упаковка'];
+/**
+ * Стартовые данные новой компании: без них первый экран приложения пустой.
+ * На узбекском — этими справочниками пользуются в цехе, а не в офисе.
+ */
+const SEED_EXPENSE_CATEGORIES = [
+  'Ijara',
+  "Kommunal to'lovlar",
+  'Materiallar',
+  'Transport',
+  'Boshqa xarajatlar',
+];
+const SEED_OPERATIONS = ['Bichish', 'Tikish', 'Qolipga tortish', 'Qadoqlash'];
 const TRIAL_DAYS = 14;
 
 @Injectable()
@@ -31,7 +40,7 @@ export class AuthService {
   async register(dto: RegisterDto, userAgent?: string) {
     const exists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
     if (exists) {
-      throw new AppException(409, 'PHONE_TAKEN', 'Этот номер уже зарегистрирован');
+      throw new AppException(409, 'PHONE_TAKEN', 'error.phone_taken');
     }
 
     const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
@@ -59,7 +68,7 @@ export class AuthService {
       // Транзакционный клиент не проходит через tenant-middleware
       // (контекст ещё не установлен), поэтому companyId проставляем явно.
       await tx.cashAccount.create({
-        data: { companyId: company.id, name: 'Основная касса', isDefault: true },
+        data: { companyId: company.id, name: 'Asosiy kassa', isDefault: true },
       });
 
       await tx.expenseCategory.createMany({
@@ -111,7 +120,7 @@ export class AuthService {
     if (!valid) throw Errors.invalidCredentials();
 
     if (!user.companyId || !user.company) {
-      throw new AppException(403, 'NO_COMPANY', 'Пользователь не привязан к компании');
+      throw new AppException(403, 'NO_COMPANY', 'error.no_company');
     }
 
     await this.prisma.user.update({
@@ -149,7 +158,7 @@ export class AuthService {
     });
 
     if (!stored) {
-      throw new AppException(401, 'INVALID_REFRESH_TOKEN', 'Сессия недействительна');
+      throw new AppException(401, 'INVALID_REFRESH_TOKEN', 'error.invalid_refresh_token');
     }
 
     if (stored.revokedAt) {
@@ -162,16 +171,16 @@ export class AuthService {
         `Повторное использование отозванного токена, семья ${stored.familyId} отозвана целиком`,
       );
 
-      throw new AppException(401, 'TOKEN_REUSED', 'Сессия завершена по соображениям безопасности');
+      throw new AppException(401, 'TOKEN_REUSED', 'error.token_reused');
     }
 
     if (stored.expiresAt < new Date()) {
-      throw new AppException(401, 'REFRESH_TOKEN_EXPIRED', 'Срок сессии истёк, войдите заново');
+      throw new AppException(401, 'REFRESH_TOKEN_EXPIRED', 'error.refresh_token_expired');
     }
 
     const { user } = stored;
     if (!user.isActive || user.deletedAt || !user.companyId) {
-      throw new AppException(401, 'USER_INACTIVE', 'Учётная запись отключена');
+      throw new AppException(401, 'USER_INACTIVE', 'error.user_inactive');
     }
 
     await this.prisma.refreshToken.update({
@@ -218,7 +227,7 @@ export class AuthService {
 
     const valid = await argon2.verify(user.passwordHash, dto.currentPassword);
     if (!valid) {
-      throw new AppException(400, 'WRONG_PASSWORD', 'Текущий пароль указан неверно');
+      throw new AppException(400, 'WRONG_PASSWORD', 'error.wrong_password');
     }
 
     await this.prisma.$transaction([
