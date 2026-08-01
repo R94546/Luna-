@@ -24,7 +24,7 @@ async function main(): Promise<void> {
       name: 'Luna Shoes',
       slug: 'luna-shoes',
       phone,
-      workLogAutoApprove: false,
+      // Автоподтверждение включено — как и по умолчанию для новых компаний.
       subscriptionEndsAt: new Date(Date.now() + 30 * 86_400_000),
     },
   });
@@ -115,8 +115,8 @@ async function main(): Promise<void> {
     ),
   );
 
-  // Выработка за 14 дней: часть подтверждена, вчерашняя ждёт подтверждения —
-  // чтобы очередь на экране «Выработка» не была пустой.
+  // Выработка за 14 дней. Все записи APPROVED: при включённом
+  // автоподтверждении очередь на проверку и должна быть пустой.
   const workLogs: {
     companyId: string;
     employeeId: string;
@@ -152,7 +152,7 @@ async function main(): Promise<void> {
         rate: String(rate),
         amount: String(quantity * rate),
         workDate,
-        status: dayOffset <= 1 ? WorkLogStatus.PENDING : WorkLogStatus.APPROVED,
+        status: WorkLogStatus.APPROVED,
         source: WorkLogSource.TELEGRAM,
       });
     });
@@ -169,7 +169,7 @@ async function main(): Promise<void> {
   Касса:     ${cashAccount.name}
   Сотрудники: ${employees.length}
   Модели:     ${products.length}
-  Выработка:  ${workLogs.length} записей (свежие — в статусе PENDING)
+  Выработка:  ${workLogs.length} записей (все APPROVED — автоподтверждение включено)
 `);
 }
 

@@ -59,6 +59,7 @@ const uz: Dict = {
 
   // Выработка и зарплата
   'error.work_log_not_pending': 'Faqat tasdiqlanmagan yozuvni tahrirlash mumkin',
+  'error.work_log_in_payroll': "Bu yozuv ish haqi davriga kiritilgan — o'zgartirib bo'lmaydi",
   'error.period_already_closed': 'Ish haqi davri allaqachon yopilgan',
   'error.rate_not_found': "«{operation}» amali uchun narx belgilanmagan",
 
@@ -111,6 +112,7 @@ const ru: Dict = {
 
   // Выработка и зарплата
   'error.work_log_not_pending': 'Изменить можно только неподтверждённую запись',
+  'error.work_log_in_payroll': 'Запись вошла в зарплатный период — изменить нельзя',
   'error.period_already_closed': 'Зарплатный период уже закрыт',
   'error.rate_not_found': 'Для операции «{operation}» не задана расценка',
 

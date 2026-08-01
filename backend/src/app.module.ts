@@ -14,6 +14,8 @@ import { OperationsModule } from './modules/operations/operations.module';
 import { PieceRatesModule } from './modules/piece-rates/piece-rates.module';
 import { ProductsModule } from './modules/products/products.module';
 import { StockModule } from './modules/stock/stock.module';
+import { TelegramModule } from './modules/telegram/telegram.module';
+import { WorkLogsModule } from './modules/work-logs/work-logs.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -28,6 +30,8 @@ import { PrismaModule } from './prisma/prisma.module';
     ProductsModule,
     StockModule,
     PieceRatesModule,
+    WorkLogsModule,
+    TelegramModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
