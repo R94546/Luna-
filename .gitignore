@@ -1,0 +1,41 @@
+# Node / NestJS
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.npm/
+
+# Окружение и секреты
+.env
+.env.*
+!.env.example
+
+# Prisma
+prisma/generated/
+
+# Flutter / Dart
+app/.dart_tool/
+app/.packages
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/ios/Pods/
+app/android/.gradle/
+app/android/local.properties
+app/**/*.g.dart
+app/**/*.freezed.dart
+*.iml
+
+# Логи
+*.log
+npm-debug.log*
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# ОС
+.DS_Store
+Thumbs.db

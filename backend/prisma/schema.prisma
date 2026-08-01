@@ -1,0 +1,907 @@
+// Luna — SaaS для обувного цеха.
+// Единственный источник правды по схеме БД.
+// Всё, что Prisma выразить не умеет (partial-индексы, RLS, триггеры) — в prisma/sql/002_constraints.sql
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+//  ENUMS
+// ============================================================
+
+enum UserRole {
+  SUPERADMIN
+  OWNER
+  ADMIN
+  ACCOUNTANT
+}
+
+enum CompanyPlan {
+  TRIAL
+  BASIC
+  PRO
+}
+
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum WorkLogStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WorkLogSource {
+  TELEGRAM
+  MANUAL
+}
+
+enum OrderStatus {
+  NEW // новый
+  IN_PROGRESS // в работе
+  READY // готов
+  ISSUED // выдан
+  CANCELLED // отменён
+}
+
+enum PayrollPeriodStatus {
+  OPEN
+  CLOSED
+  PAID
+}
+
+enum SalaryPaymentType {
+  ADVANCE // аванс
+  SALARY // зарплата за период
+  BONUS // премия
+}
+
+enum StockMovementType {
+  PRODUCTION_IN // выпуск с производства
+  PURCHASE_IN // закупка
+  RETURN_IN // возврат от клиента
+  SALE_OUT // продажа
+  ORDER_OUT // выдача по заказу
+  WRITE_OFF // брак / списание
+  ADJUSTMENT // инвентаризация
+}
+
+enum CashDirection {
+  IN
+  OUT
+}
+
+enum CashCategory {
+  SALE
+  EXPENSE
+  SALARY
+  INVESTMENT // внесение денег владельцем
+  WITHDRAWAL // изъятие владельцем
+  TRANSFER
+  OTHER
+}
+
+enum CashAccountType {
+  CASH
+  CARD
+  BANK
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  DEBT // в долг, оплата позже
+}
+
+enum NotificationType {
+  LOW_STOCK
+  ORDER_OVERDUE
+  WORK_LOG_PENDING
+  WORK_LOG_ANOMALY
+  PAYROLL_READY
+  SYSTEM
+}
+
+// ============================================================
+//  ТЕНАНТЫ И ПОЛЬЗОВАТЕЛИ
+// ============================================================
+
+model Company {
+  id                 String        @id @default(uuid()) @db.Uuid
+  name               String        @db.VarChar(160)
+  slug               String        @unique @db.VarChar(64)
+  phone              String?       @db.VarChar(20)
+  address            String?       @db.VarChar(255)
+  currency           String        @default("UZS") @db.VarChar(3)
+  timezone           String        @default("Asia/Tashkent") @db.VarChar(64)
+  plan               CompanyPlan   @default(TRIAL)
+  status             CompanyStatus @default(ACTIVE)
+  subscriptionEndsAt DateTime?     @map("subscription_ends_at") @db.Timestamptz(3)
+
+  // Настройки бизнес-логики
+  workLogAutoApprove Boolean @default(false) @map("work_log_auto_approve")
+  defaultMarginPct   Decimal @default(30) @map("default_margin_pct") @db.Decimal(5, 2)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  users             User[]
+  employees         Employee[]
+  operations        Operation[]
+  pieceRates        PieceRate[]
+  products          Product[]
+  workLogs          WorkLog[]
+  payrollPeriods    PayrollPeriod[]
+  payrollEntries    PayrollEntry[]
+  salaryPayments    SalaryPayment[]
+  customers         Customer[]
+  orders            Order[]
+  sales             Sale[]
+  stockMovements    StockMovement[]
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  cashAccounts      CashAccount[]
+  cashTransactions  CashTransaction[]
+  materials         Material[]
+  costCalculations  CostCalculation[]
+  notifications     Notification[]
+  linkCodes         TelegramLinkCode[]
+  counters          CompanyCounter[]
+  auditLogs         AuditLog[]
+
+  @@index([status])
+  @@map("companies")
+}
+
+/// Пер-компанийные счётчики для человекочитаемых номеров (заказ №14, продажа №203).
+/// Инкремент только внутри транзакции через SELECT ... FOR UPDATE.
+model CompanyCounter {
+  companyId String @map("company_id") @db.Uuid
+  entity    String @db.VarChar(32) // 'order' | 'sale'
+  lastValue Int    @default(0) @map("last_value")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, entity])
+  @@map("company_counters")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String?  @map("company_id") @db.Uuid // null только у SUPERADMIN
+  phone        String   @unique @db.VarChar(20)
+  email        String?  @db.VarChar(160)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  fullName     String   @map("full_name") @db.VarChar(160)
+  role         UserRole @default(OWNER)
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(3)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company              Company?          @relation(fields: [companyId], references: [id])
+  refreshTokens        RefreshToken[]
+  pushTokens           PushToken[]
+  approvedWorkLogs     WorkLog[]         @relation("WorkLogApprover")
+  createdOrders        Order[]           @relation("OrderCreator")
+  createdSales         Sale[]            @relation("SaleCreator")
+  createdExpenses      Expense[]         @relation("ExpenseCreator")
+  createdCashTx        CashTransaction[] @relation("CashTxCreator")
+  createdStockMoves    StockMovement[]   @relation("StockMoveCreator")
+  createdSalaryPayouts SalaryPayment[]   @relation("SalaryPaymentCreator")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@index([companyId, role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64) // sha256 hex
+  familyId  String    @map("family_id") @db.Uuid // ротация: обнаружение переиспользования
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  userAgent String?   @map("user_agent") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(255)
+  platform  String   @db.VarChar(16) // android | ios | web
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_tokens")
+}
+
+// ============================================================
+//  СОТРУДНИКИ И TELEGRAM
+// ============================================================
+
+model Employee {
+  id        String @id @default(uuid()) @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+
+  fullName String  @map("full_name") @db.VarChar(160)
+  phone    String? @db.VarChar(20)
+  position String? @db.VarChar(80)
+
+  /// Операция по умолчанию — если у рабочего одна специализация,
+  /// бот пропускает шаг выбора операции.
+  defaultOperationId String? @map("default_operation_id") @db.Uuid
+
+  telegramUserId   BigInt?   @unique @map("telegram_user_id")
+  telegramUsername String?   @map("telegram_username") @db.VarChar(64)
+  telegramLinkedAt DateTime? @map("telegram_linked_at") @db.Timestamptz(3)
+
+  isActive Boolean   @default(true) @map("is_active")
+  hiredAt  DateTime? @map("hired_at") @db.Date
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company          Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  defaultOperation Operation?         @relation(fields: [defaultOperationId], references: [id])
+  workLogs         WorkLog[]
+  pieceRates       PieceRate[]
+  payrollEntries   PayrollEntry[]
+  salaryPayments   SalaryPayment[]
+  linkCodes        TelegramLinkCode[]
+
+  @@index([companyId, isActive])
+  @@map("employees")
+}
+
+model TelegramLinkCode {
+  id         String    @id @default(uuid()) @db.Uuid
+  companyId  String    @map("company_id") @db.Uuid
+  employeeId String    @map("employee_id") @db.Uuid
+  code       String    @unique @db.VarChar(12)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt     DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("telegram_link_codes")
+}
+
+/// Идемпотентность вебхука Telegram: один update_id обрабатывается один раз.
+/// Чистится крон-джобой раз в сутки (храним 7 дней).
+model TelegramUpdate {
+  updateId    BigInt   @id @map("update_id")
+  processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz(3)
+
+  @@index([processedAt])
+  @@map("telegram_updates")
+}
+
+// ============================================================
+//  ВИДЫ РАБОТ И РАСЦЕНКИ
+// ============================================================
+
+/// Операция производственного цикла: раскрой, пошив, затяжка, упаковка.
+model Operation {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  name      String  @db.VarChar(80)
+  code      String? @db.VarChar(32)
+  sortOrder Int     @default(0) @map("sort_order")
+  isActive  Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company           Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  pieceRates        PieceRate[]
+  workLogs          WorkLog[]
+  defaultForEmployees Employee[]
+
+  @@unique([companyId, name])
+  @@index([companyId, isActive])
+  @@map("operations")
+}
+
+/// Сдельная расценка: сколько платим за единицу.
+/// Разрешение ставки идёт от частного к общему:
+///   1. (product, operation, employee)  — персональная ставка
+///   2. (product, operation, null)      — ставка по модели
+///   3. (null,    operation, null)      — базовая ставка операции
+/// validFrom/validTo дают историю: старые work_logs не пересчитываются,
+/// потому что фактическая ставка копируется в work_logs.rate.
+model PieceRate {
+  id          String    @id @default(uuid()) @db.Uuid
+  companyId   String    @map("company_id") @db.Uuid
+  operationId String    @map("operation_id") @db.Uuid
+  productId   String?   @map("product_id") @db.Uuid
+  employeeId  String?   @map("employee_id") @db.Uuid
+  rate        Decimal   @db.Decimal(14, 2)
+  validFrom   DateTime  @default(now()) @map("valid_from") @db.Date
+  validTo     DateTime? @map("valid_to") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  employee  Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, operationId, productId, employeeId])
+  @@map("piece_rates")
+}
+
+// ============================================================
+//  ТОВАРЫ И СКЛАД
+// ============================================================
+
+model Product {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  sku       String  @db.VarChar(48)
+  name      String  @db.VarChar(160)
+  category  String? @db.VarChar(80)
+  photoUrl  String? @map("photo_url") @db.VarChar(512)
+
+  /// Цена продажи по умолчанию.
+  salePrice Decimal @default(0) @map("sale_price") @db.Decimal(14, 2)
+  /// Себестоимость, посчитанная калькулятором. Копируется в sale_items при продаже.
+  costPrice Decimal @default(0) @map("cost_price") @db.Decimal(14, 2)
+
+  /// Денормализованный остаток. Меняется ТОЛЬКО вместе с записью в stock_movements.
+  stockQuantity Int @default(0) @map("stock_quantity")
+  minStockLevel Int @default(0) @map("min_stock_level")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workLogs         WorkLog[]
+  pieceRates       PieceRate[]
+  orderItems       OrderItem[]
+  saleItems        SaleItem[]
+  stockMovements   StockMovement[]
+  costCalculations CostCalculation[]
+
+  @@unique([companyId, sku])
+  @@index([companyId, isActive])
+  @@map("products")
+}
+
+/// Журнал движений склада. Единственный способ изменить остаток.
+model StockMovement {
+  id        String            @id @default(uuid()) @db.Uuid
+  companyId String            @map("company_id") @db.Uuid
+  productId String            @map("product_id") @db.Uuid
+  type      StockMovementType
+  /// Со знаком: приход +, расход −.
+  quantity     Int
+  balanceAfter Int @map("balance_after")
+
+  /// Полиморфная ссылка на источник: 'sale' | 'order' | 'work_log' | 'manual'
+  refType String? @map("ref_type") @db.VarChar(24)
+  refId   String? @map("ref_id") @db.Uuid
+
+  note        String?  @db.VarChar(255)
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+  createdBy User?   @relation("StockMoveCreator", fields: [createdById], references: [id])
+
+  @@index([companyId, productId, createdAt(sort: Desc)])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@index([refType, refId])
+  @@map("stock_movements")
+}
+
+// ============================================================
+//  ВЫРАБОТКА И ЗАРПЛАТА
+// ============================================================
+
+/// Отчёт о выполненной работе. Приходит из Telegram или заводится вручную.
+/// Это единственный источник начисления сдельной зарплаты.
+model WorkLog {
+  id          String @id @default(uuid()) @db.Uuid
+  companyId   String @map("company_id") @db.Uuid
+  employeeId  String @map("employee_id") @db.Uuid
+  productId   String @map("product_id") @db.Uuid
+  operationId String @map("operation_id") @db.Uuid
+
+  quantity Int
+  /// Ставка на момент записи — снимок из piece_rates. Не пересчитывается никогда.
+  rate     Decimal @db.Decimal(14, 2)
+  /// quantity * rate. Хранится, чтобы аналитика не считала произведение на лету.
+  amount   Decimal @db.Decimal(14, 2)
+
+  workDate DateTime      @map("work_date") @db.Date
+  status   WorkLogStatus @default(PENDING)
+  source   WorkLogSource @default(TELEGRAM)
+
+  note           String? @db.VarChar(255)
+  rejectReason   String? @map("reject_reason") @db.VarChar(255)
+  telegramMsgId  BigInt? @map("telegram_msg_id")
+
+  approvedById String?   @map("approved_by_id") @db.Uuid
+  approvedAt   DateTime? @map("approved_at") @db.Timestamptz(3)
+
+  /// Заполняется при закрытии зарплатного периода — защита от двойной оплаты.
+  payrollEntryId String? @map("payroll_entry_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee     Employee      @relation(fields: [employeeId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id])
+  operation    Operation     @relation(fields: [operationId], references: [id])
+  approvedBy   User?         @relation("WorkLogApprover", fields: [approvedById], references: [id])
+  payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id])
+
+  @@index([companyId, workDate(sort: Desc)])
+  @@index([companyId, employeeId, workDate(sort: Desc)])
+  @@index([companyId, status])
+  @@index([companyId, productId, workDate])
+  @@index([payrollEntryId])
+  @@map("work_logs")
+}
+
+/// Зарплатный период (обычно календарный месяц или полмесяца).
+model PayrollPeriod {
+  id          String              @id @default(uuid()) @db.Uuid
+  companyId   String              @map("company_id") @db.Uuid
+  periodStart DateTime            @map("period_start") @db.Date
+  periodEnd   DateTime            @map("period_end") @db.Date
+  status      PayrollPeriodStatus @default(OPEN)
+  totalAmount Decimal             @default(0) @map("total_amount") @db.Decimal(14, 2)
+  closedAt    DateTime?           @map("closed_at") @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entries PayrollEntry[]
+
+  @@unique([companyId, periodStart, periodEnd])
+  @@index([companyId, status])
+  @@map("payroll_periods")
+}
+
+/// Начисление одному сотруднику за период.
+model PayrollEntry {
+  id         String @id @default(uuid()) @db.Uuid
+  companyId  String @map("company_id") @db.Uuid
+  periodId   String @map("period_id") @db.Uuid
+  employeeId String @map("employee_id") @db.Uuid
+
+  /// Сумма по APPROVED work_logs периода.
+  workAmount   Decimal @default(0) @map("work_amount") @db.Decimal(14, 2)
+  bonus        Decimal @default(0) @db.Decimal(14, 2)
+  deduction    Decimal @default(0) @db.Decimal(14, 2)
+  /// Уже выплаченные авансы за период.
+  advancePaid  Decimal @default(0) @map("advance_paid") @db.Decimal(14, 2)
+  /// workAmount + bonus − deduction
+  totalAccrued Decimal @default(0) @map("total_accrued") @db.Decimal(14, 2)
+  /// totalAccrued − advancePaid
+  toPay        Decimal @default(0) @map("to_pay") @db.Decimal(14, 2)
+
+  isPaid Boolean @default(false) @map("is_paid")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company  Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  period   PayrollPeriod   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  employee Employee        @relation(fields: [employeeId], references: [id])
+  workLogs WorkLog[]
+  payments SalaryPayment[]
+
+  @@unique([periodId, employeeId])
+  @@index([companyId, employeeId])
+  @@map("payroll_entries")
+}
+
+/// Факт выплаты денег сотруднику. Всегда рождает cash_transactions (OUT/SALARY).
+model SalaryPayment {
+  id             String            @id @default(uuid()) @db.Uuid
+  companyId      String            @map("company_id") @db.Uuid
+  employeeId     String            @map("employee_id") @db.Uuid
+  payrollEntryId String?           @map("payroll_entry_id") @db.Uuid
+  type           SalaryPaymentType
+  amount         Decimal           @db.Decimal(14, 2)
+  paidAt         DateTime          @map("paid_at") @db.Date
+  note           String?           @db.VarChar(255)
+
+  cashTransactionId String? @unique @map("cash_transaction_id") @db.Uuid
+  createdById       String? @map("created_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee        Employee         @relation(fields: [employeeId], references: [id])
+  payrollEntry    PayrollEntry?    @relation(fields: [payrollEntryId], references: [id])
+  cashTransaction CashTransaction? @relation(fields: [cashTransactionId], references: [id])
+  createdBy       User?            @relation("SalaryPaymentCreator", fields: [createdById], references: [id])
+
+  @@index([companyId, employeeId, paidAt(sort: Desc)])
+  @@index([companyId, paidAt(sort: Desc)])
+  @@map("salary_payments")
+}
+
+// ============================================================
+//  КЛИЕНТЫ, ЗАКАЗЫ, ПРОДАЖИ
+// ============================================================
+
+model Customer {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  name      String  @db.VarChar(160)
+  phone     String? @db.VarChar(20)
+  note      String? @db.VarChar(255)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  orders  Order[]
+  sales   Sale[]
+
+  @@index([companyId, name])
+  @@map("customers")
+}
+
+model Order {
+  id          String      @id @default(uuid()) @db.Uuid
+  companyId   String      @map("company_id") @db.Uuid
+  orderNumber Int         @map("order_number")
+  customerId  String?     @map("customer_id") @db.Uuid
+  status      OrderStatus @default(NEW)
+
+  dueDate  DateTime? @map("due_date") @db.Date
+  issuedAt DateTime? @map("issued_at") @db.Timestamptz(3)
+
+  totalAmount   Decimal @default(0) @map("total_amount") @db.Decimal(14, 2)
+  prepaidAmount Decimal @default(0) @map("prepaid_amount") @db.Decimal(14, 2)
+
+  note        String? @db.VarChar(500)
+  createdById String? @map("created_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer  Customer?   @relation(fields: [customerId], references: [id])
+  createdBy User?       @relation("OrderCreator", fields: [createdById], references: [id])
+  items     OrderItem[]
+  sales     Sale[]
+
+  @@unique([companyId, orderNumber])
+  @@index([companyId, status, dueDate])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@index([companyId, customerId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(uuid()) @db.Uuid
+  orderId   String @map("order_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+
+  quantity Int
+  /// Сколько уже произведено — двигается по APPROVED work_logs финальной операции.
+  producedQuantity Int     @default(0) @map("produced_quantity")
+  unitPrice        Decimal @db.Decimal(14, 2)
+  total            Decimal @db.Decimal(14, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Sale {
+  id         String  @id @default(uuid()) @db.Uuid
+  companyId  String  @map("company_id") @db.Uuid
+  saleNumber Int     @map("sale_number")
+  customerId String? @map("customer_id") @db.Uuid
+  orderId    String? @map("order_id") @db.Uuid
+
+  totalAmount   Decimal       @map("total_amount") @db.Decimal(14, 2)
+  discount      Decimal       @default(0) @db.Decimal(14, 2)
+  paidAmount    Decimal       @default(0) @map("paid_amount") @db.Decimal(14, 2)
+  /// Сумма cost_price_snapshot всех позиций — чтобы прибыль считалась без join.
+  totalCost     Decimal       @default(0) @map("total_cost") @db.Decimal(14, 2)
+  paymentMethod PaymentMethod @default(CASH) @map("payment_method")
+
+  soldAt      DateTime @map("sold_at") @db.Timestamptz(3)
+  note        String?  @db.VarChar(255)
+  createdById String?  @map("created_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer  Customer?         @relation(fields: [customerId], references: [id])
+  order     Order?            @relation(fields: [orderId], references: [id])
+  createdBy User?             @relation("SaleCreator", fields: [createdById], references: [id])
+  items     SaleItem[]
+  cashTx    CashTransaction[]
+
+  @@unique([companyId, saleNumber])
+  @@index([companyId, soldAt(sort: Desc)])
+  @@index([companyId, customerId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String @id @default(uuid()) @db.Uuid
+  saleId    String @map("sale_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(14, 2)
+  /// Себестоимость на момент продажи. Прибыль прошлого месяца не должна
+  /// меняться от того, что сегодня пересчитали калькулятор.
+  costPriceSnapshot Decimal @map("cost_price_snapshot") @db.Decimal(14, 2)
+  total             Decimal @db.Decimal(14, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+// ============================================================
+//  КАССА И РАСХОДЫ
+// ============================================================
+
+model CashAccount {
+  id        String          @id @default(uuid()) @db.Uuid
+  companyId String          @map("company_id") @db.Uuid
+  name      String          @db.VarChar(80)
+  type      CashAccountType @default(CASH)
+  /// Денормализованный баланс: сумма транзакций. Обновляется в той же транзакции.
+  balance   Decimal         @default(0) @db.Decimal(14, 2)
+  isDefault Boolean         @default(false) @map("is_default")
+  isActive  Boolean         @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions CashTransaction[]
+
+  @@unique([companyId, name])
+  @@map("cash_accounts")
+}
+
+/// Единый денежный журнал. Продажа, расход, выплата зарплаты — всё сюда.
+model CashTransaction {
+  id        String        @id @default(uuid()) @db.Uuid
+  companyId String        @map("company_id") @db.Uuid
+  accountId String        @map("account_id") @db.Uuid
+  direction CashDirection
+  category  CashCategory
+  amount    Decimal       @db.Decimal(14, 2)
+
+  /// Полиморфная ссылка: 'sale' | 'expense' | 'salary_payment' | 'manual'
+  refType String? @map("ref_type") @db.VarChar(24)
+  refId   String? @map("ref_id") @db.Uuid
+  saleId  String? @map("sale_id") @db.Uuid
+
+  occurredAt  DateTime @map("occurred_at") @db.Timestamptz(3)
+  note        String?  @db.VarChar(255)
+  createdById String?  @map("created_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  account       CashAccount    @relation(fields: [accountId], references: [id])
+  sale          Sale?          @relation(fields: [saleId], references: [id])
+  createdBy     User?          @relation("CashTxCreator", fields: [createdById], references: [id])
+  expense       Expense?
+  salaryPayment SalaryPayment?
+
+  @@index([companyId, occurredAt(sort: Desc)])
+  @@index([companyId, category, occurredAt(sort: Desc)])
+  @@index([accountId, occurredAt(sort: Desc)])
+  @@index([refType, refId])
+  @@map("cash_transactions")
+}
+
+model ExpenseCategory {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  name      String  @db.VarChar(80)
+  /// Системные категории создаются при регистрации компании (аренда, коммуналка,
+  /// материалы, прочее) и не удаляются.
+  isSystem  Boolean @default(false) @map("is_system")
+  color     String? @db.VarChar(9)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@unique([companyId, name])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id         String  @id @default(uuid()) @db.Uuid
+  companyId  String  @map("company_id") @db.Uuid
+  categoryId String  @map("category_id") @db.Uuid
+  amount     Decimal @db.Decimal(14, 2)
+
+  spentAt DateTime @map("spent_at") @db.Date
+  note    String?  @db.VarChar(255)
+
+  cashTransactionId String? @unique @map("cash_transaction_id") @db.Uuid
+  createdById       String? @map("created_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category        ExpenseCategory  @relation(fields: [categoryId], references: [id])
+  cashTransaction CashTransaction? @relation(fields: [cashTransactionId], references: [id])
+  createdBy       User?            @relation("ExpenseCreator", fields: [createdById], references: [id])
+
+  @@index([companyId, spentAt(sort: Desc)])
+  @@index([companyId, categoryId, spentAt(sort: Desc)])
+  @@map("expenses")
+}
+
+// ============================================================
+//  КАЛЬКУЛЯТОР СЕБЕСТОИМОСТИ
+// ============================================================
+
+/// Справочник материалов с ценой за единицу — чтобы не вбивать заново.
+model Material {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  name      String  @db.VarChar(120)
+  unit      String  @db.VarChar(16) // м, дм², пара, шт, кг
+  unitPrice Decimal @map("unit_price") @db.Decimal(14, 2)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  company Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items   CostCalculationItem[]
+
+  @@unique([companyId, name])
+  @@map("materials")
+}
+
+/// Расчёт себестоимости пары. Хранится как снимок: цены материалов
+/// на момент расчёта не меняются задним числом.
+model CostCalculation {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  productId String? @map("product_id") @db.Uuid
+  name      String  @db.VarChar(160)
+
+  materialsCost Decimal @default(0) @map("materials_cost") @db.Decimal(14, 2)
+  /// Сумма сдельных расценок всех операций модели.
+  laborCost     Decimal @default(0) @map("labor_cost") @db.Decimal(14, 2)
+  /// Накладные: аренда+коммуналка / плановый выпуск, либо ручной ввод.
+  overheadCost  Decimal @default(0) @map("overhead_cost") @db.Decimal(14, 2)
+  timeMinutes   Int     @default(0) @map("time_minutes")
+
+  totalCost        Decimal @default(0) @map("total_cost") @db.Decimal(14, 2)
+  marginPercent    Decimal @default(30) @map("margin_percent") @db.Decimal(5, 2)
+  recommendedPrice Decimal @default(0) @map("recommended_price") @db.Decimal(14, 2)
+  profitPerUnit    Decimal @default(0) @map("profit_per_unit") @db.Decimal(14, 2)
+
+  /// true — этот расчёт записан в products.cost_price
+  isApplied Boolean @default(false) @map("is_applied")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  company Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product Product?              @relation(fields: [productId], references: [id])
+  items   CostCalculationItem[]
+
+  @@index([companyId, productId])
+  @@map("cost_calculations")
+}
+
+model CostCalculationItem {
+  id            String  @id @default(uuid()) @db.Uuid
+  calculationId String  @map("calculation_id") @db.Uuid
+  materialId    String? @map("material_id") @db.Uuid
+
+  /// Снимок названия и цены — материал может быть переименован или удалён.
+  name      String  @db.VarChar(120)
+  unit      String  @db.VarChar(16)
+  quantity  Decimal @db.Decimal(12, 3)
+  unitPrice Decimal @map("unit_price") @db.Decimal(14, 2)
+  total     Decimal @db.Decimal(14, 2)
+
+  calculation CostCalculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+  material    Material?       @relation(fields: [materialId], references: [id])
+
+  @@index([calculationId])
+  @@map("cost_calculation_items")
+}
+
+// ============================================================
+//  УВЕДОМЛЕНИЯ И АУДИТ
+// ============================================================
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  companyId String           @map("company_id") @db.Uuid
+  /// null — уведомление для всех пользователей компании
+  userId    String?          @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(160)
+  body      String           @db.VarChar(500)
+  payload   Json?
+  isRead    Boolean          @default(false) @map("is_read")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, isRead, createdAt(sort: Desc)])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+/// Аудит финансовых и критичных операций.
+model AuditLog {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  userId    String? @map("user_id") @db.Uuid
+  action    String  @db.VarChar(48) // create | update | delete | approve | pay
+  entity    String  @db.VarChar(48)
+  entityId  String? @map("entity_id") @db.Uuid
+  changes   Json?
+  ip        String? @db.VarChar(45)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@index([companyId, createdAt(sort: Desc)])
+  @@index([companyId, entity, entityId])
+  @@map("audit_logs")
+}
