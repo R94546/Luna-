@@ -11,6 +11,11 @@
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
+    // Обязательно внутри dist. nest build запускается с deleteOutDir и сносит
+    // dist целиком; если справка об инкрементальной сборке лежит рядом с
+    // tsconfig, она это переживает и TypeScript считает уже удалённые .js
+    // актуальными — сборка «успешна», а половины файлов в dist нет.
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "skipLibCheck": true,
     "strict": true,
     "strictNullChecks": true,
