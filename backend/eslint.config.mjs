@@ -60,4 +60,13 @@ export default [
       'no-console': 'off',
     },
   },
+  {
+    // describe/it/expect приходят из окружения jest, а не из импортов.
+    files: ['**/*.spec.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  },
 ];
