@@ -40,7 +40,12 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Временные папки с патчами
 temp-fix/
 next-fix/
 check-fix/
 telegram-fixes/
+
+# Дампы дерева каталогов (tree /f > ...) — не должны попадать в репозиторий
+structure.txt
+clean-structure.txt

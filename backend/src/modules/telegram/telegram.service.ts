@@ -169,7 +169,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
    */
   private async withEmployee(
     ctx: Context,
-    fn: (employee: Employee) => Promise<void>,
+    fn: (employee: Employee, tgId: number) => Promise<void>,
   ): Promise<void> {
     const tgId = ctx.from?.id;
     if (!tgId) return;
@@ -188,7 +188,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    await runWithTenant({ companyId: employee.companyId }, () => fn(employee));
+    await runWithTenant({ companyId: employee.companyId }, () => fn(employee, tgId));
   }
 
   private checkRateLimit(tgId: number): boolean {

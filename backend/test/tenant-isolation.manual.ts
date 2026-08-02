@@ -26,9 +26,13 @@ async function main() {
     }),
   ]);
 
-  console.log(`Компания A: ${a!.name}\nКомпания B: ${b.name}\n`);
+  if (!a) {
+    throw new Error('Компания luna-shoes не найдена — сначала выполните `npm run seed`.');
+  }
 
-  await runWithTenant({ companyId: a!.id }, async () => {
+  console.log(`Компания A: ${a.name}\nКомпания B: ${b.name}\n`);
+
+  await runWithTenant({ companyId: a.id }, async () => {
     const products = await prisma.product.findMany();
     const logs = await prisma.workLog.count();
     console.log(`[контекст A] products: ${products.length}, work_logs: ${logs}`);
@@ -41,13 +45,18 @@ async function main() {
   });
 
   // Самое опасное: знаем ID чужой записи и запрашиваем напрямую по нему.
-  const victim = await prisma.product.findFirst({ where: { companyId: a!.id } });
+  const victim = await prisma.product.findFirst({ where: { companyId: a.id } });
+
+  if (!victim) {
+    throw new Error('У компании A нет товаров — проверять нечего, выполните `npm run seed`.');
+  }
+
   await runWithTenant({ companyId: b.id }, async () => {
-    const stolen = await prisma.product.findUnique({ where: { id: victim!.id } });
+    const stolen = await prisma.product.findUnique({ where: { id: victim.id } });
     console.log(`[контекст B] findUnique по чужому id → ${stolen === null ? 'null ✅' : 'ДАННЫЕ УТЕКЛИ ❌'}`);
 
     const updated = await prisma.product.updateMany({
-      where: { id: victim!.id },
+      where: { id: victim.id },
       data: { salePrice: '1' },
     });
     console.log(`[контекст B] попытка изменить чужую запись → изменено строк: ${updated.count} ${updated.count === 0 ? '✅' : '❌'}`);

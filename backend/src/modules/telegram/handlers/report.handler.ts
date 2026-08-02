@@ -28,17 +28,17 @@ export class ReportHandler {
   ) {}
 
   register(bot: Bot, guard: EmployeeGuard): void {
-    bot.command('report', (ctx) => guard(ctx, (e) => this.startReport(ctx, e)));
+    bot.command('report', (ctx) => guard(ctx, (e, tgId) => this.startReport(ctx, e, tgId)));
 
-    bot.callbackQuery('report', (ctx) => guard(ctx, (e) => this.startReport(ctx, e)));
+    bot.callbackQuery('report', (ctx) => guard(ctx, (e, tgId) => this.startReport(ctx, e, tgId)));
     bot.callbackQuery('all', (ctx) => guard(ctx, (e) => this.askProduct(ctx, e, true)));
-    bot.callbackQuery('cancel', (ctx) => guard(ctx, () => this.onCancel(ctx)));
+    bot.callbackQuery('cancel', (ctx) => guard(ctx, (_e, tgId) => this.onCancel(ctx, tgId)));
 
     bot.callbackQuery(/^p:(.+)$/, (ctx) =>
-      guard(ctx, (e) => this.onProductChosen(ctx, e, ctx.match[1])),
+      guard(ctx, (e, tgId) => this.onProductChosen(ctx, e, tgId, ctx.match[1])),
     );
     bot.callbackQuery(/^o:(.+)$/, (ctx) =>
-      guard(ctx, (e) => this.onOperationChosen(ctx, e, ctx.match[1])),
+      guard(ctx, (_e, tgId) => this.onOperationChosen(ctx, tgId, ctx.match[1])),
     );
     bot.callbackQuery(/^undo:(.+)$/, (ctx) =>
       guard(ctx, (e) => this.onUndo(ctx, e, ctx.match[1])),
@@ -51,8 +51,8 @@ export class ReportHandler {
 
   // ── Шаги мастера ─────────────────────────────────────────────────────────
 
-  private async startReport(ctx: Context, employee: Employee): Promise<void> {
-    this.sessions.clear(ctx.from!.id);
+  private async startReport(ctx: Context, employee: Employee, tgId: number): Promise<void> {
+    this.sessions.clear(tgId);
     await this.askProduct(ctx, employee, false);
   }
 
@@ -90,14 +90,15 @@ export class ReportHandler {
   private async onProductChosen(
     ctx: Context,
     employee: Employee,
+    tgId: number,
     productId: string,
   ): Promise<void> {
-    const session = this.sessions.get(ctx.from!.id);
+    const session = this.sessions.get(tgId);
     session.productId = productId;
 
     // У рабочего одна специализация — шаг выбора операции лишний.
     if (employee.defaultOperationId) {
-      await this.onOperationChosen(ctx, employee, employee.defaultOperationId);
+      await this.onOperationChosen(ctx, tgId, employee.defaultOperationId);
       return;
     }
 
@@ -120,10 +121,10 @@ export class ReportHandler {
 
   private async onOperationChosen(
     ctx: Context,
-    _employee: Employee,
+    tgId: number,
     operationId: string,
   ): Promise<void> {
-    const session = this.sessions.get(ctx.from!.id);
+    const session = this.sessions.get(tgId);
     session.operationId = operationId;
     session.step = 'awaiting_quantity';
 
@@ -148,18 +149,18 @@ export class ReportHandler {
     // Команды обрабатываются своими хендлерами — сюда они долетают следом.
     if (!text || text.startsWith('/')) return;
 
-    await guard(ctx, async (employee) => {
-      const session = this.sessions.get(ctx.from!.id);
+    await guard(ctx, async (employee, tgId) => {
+      const session = this.sessions.get(tgId);
 
       if (session.step === 'awaiting_quantity') {
-        await this.onQuantityEntered(ctx, employee, text, session);
+        await this.onQuantityEntered(ctx, employee, tgId, text, session);
         return;
       }
 
       // Быстрый ввод «Sport-12 24» — модель и количество одной строкой.
       const match = text.match(/^(.+?)\s+(\d+)$/);
       if (match) {
-        await this.quickReport(ctx, employee, match[1].trim(), Number(match[2]));
+        await this.quickReport(ctx, employee, tgId, match[1].trim(), Number(match[2]));
         return;
       }
 
@@ -170,6 +171,7 @@ export class ReportHandler {
   private async onQuantityEntered(
     ctx: Context,
     employee: Employee,
+    tgId: number,
     text: string,
     session: Session,
   ): Promise<void> {
@@ -188,23 +190,24 @@ export class ReportHandler {
     // Сессия протухла между выбором модели и вводом числа — начинаем сначала,
     // чтобы не записать выработку по угаданным полям.
     if (!session.productId || !session.operationId) {
-      await this.startReport(ctx, employee);
+      await this.startReport(ctx, employee, tgId);
       return;
     }
 
     await this.saveReport(ctx, employee, session.productId, session.operationId, quantity);
-    this.sessions.clear(ctx.from!.id);
+    this.sessions.clear(tgId);
   }
 
   /** Быстрый ввод: ищем модель по артикулу или названию. */
   private async quickReport(
     ctx: Context,
     employee: Employee,
+    tgId: number,
     query: string,
     quantity: number,
   ): Promise<void> {
     if (!employee.defaultOperationId) {
-      await this.startReport(ctx, employee);
+      await this.startReport(ctx, employee, tgId);
       return;
     }
 
@@ -220,7 +223,7 @@ export class ReportHandler {
     });
 
     if (!product) {
-      await this.startReport(ctx, employee);
+      await this.startReport(ctx, employee, tgId);
       return;
     }
 
@@ -279,8 +282,8 @@ export class ReportHandler {
     await ctx.reply(removed ? texts.undoDone : texts.undoTooLate);
   }
 
-  private async onCancel(ctx: Context): Promise<void> {
-    this.sessions.clear(ctx.from!.id);
+  private async onCancel(ctx: Context, tgId: number): Promise<void> {
+    this.sessions.clear(tgId);
     await ctx.reply(texts.cancelled, { reply_markup: mainMenu() });
   }
 }

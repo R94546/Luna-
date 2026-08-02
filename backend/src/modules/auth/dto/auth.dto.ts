@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
 const phoneSchema = z
   .string()
-  .transform((v) => v.replace(/[\s()\-]/g, ''))
+  .transform((v) => v.replace(/[\s()-]/g, ''))
   .transform((v) => {
     if (v.startsWith('+998')) return v;
     if (v.startsWith('998')) return `+${v}`;
