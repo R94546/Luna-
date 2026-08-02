@@ -139,7 +139,14 @@ async function main(): Promise<void> {
 
     employees.forEach((emp, idx) => {
       const product = products[idx % products.length];
-      const operationId = emp.defaultOperationId!;
+      const operationId = emp.defaultOperationId;
+
+      // Выработка без операции не имеет смысла: по ней не резолвится расценка.
+      // Если сюда попал сотрудник без специализации — сломан код выше, а не данные.
+      if (!operationId) {
+        throw new Error(`У сотрудника ${emp.fullName} не задана операция по умолчанию`);
+      }
+
       const rate = operationId === operations[2].id && product.id === products[1].id ? 16000 : baseRates[idx === 0 ? 2 : idx === 1 ? 1 : 0];
       const quantity = 18 + ((dayOffset * 7 + idx * 5) % 12);
 

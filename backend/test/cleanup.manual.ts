@@ -38,7 +38,7 @@ console.log(`  сразу после уборки (окно ещё живо): ${
 
 // Протухаем половину: сдвигаем окно в прошлое
 let n = 0;
-for (const [k, v] of limits) {
+for (const v of limits.values()) {
   if (n++ % 2 === 0) v.resetAt = Date.now() - 1;
 }
 service.cleanupRateLimits();

@@ -8,10 +8,16 @@ import { texts } from './bot-texts';
  * Реализацию держит TelegramService, обработчики получают её параметром:
  * так они не зависят ни от Prisma-поиска сотрудника, ни от AsyncLocalStorage,
  * и их можно тестировать, подставив тривиальную заглушку.
+ *
+ * `tgId` передаётся вторым аргументом, хотя он есть и в `ctx.from`: guard
+ * уже отсеял апдейты без отправителя, но для типов `ctx.from` остаётся
+ * `undefined`. Явный параметр закрывает инвариант в сигнатуре — иначе
+ * каждый обработчик писал бы `ctx.from!.id` и терял бы гарантию при
+ * первом же вызове в обход guard.
  */
 export type EmployeeGuard = (
   ctx: Context,
-  fn: (employee: Employee) => Promise<void>,
+  fn: (employee: Employee, tgId: number) => Promise<void>,
 ) => Promise<void>;
 
 /** Главное меню. Одно на всех обработчиков, чтобы кнопки не разъехались. */
