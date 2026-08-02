@@ -1,0 +1,22 @@
+Рефакторинг Telegram-модуля + 5 фиксов + починка сборки.
+Распаковать поверх папки Luna.
+
+НОВЫЕ:
+  backend/src/modules/telegram/handlers/{start,report,summary}.handler.ts
+  backend/src/modules/telegram/telegram-session.service.ts
+  backend/src/modules/telegram/telegram.utils.ts
+  backend/test/cleanup.manual.ts
+
+ЗАМЕНЯЮТСЯ:
+  backend/src/modules/telegram/telegram.service.ts
+  backend/src/modules/telegram/telegram.module.ts
+  backend/src/config/env.ts        REDIS_URL необязателен
+  backend/tsconfig.json            ВАЖНО: без него npm run start:prod не работает
+  backend/test/telegram-flow.manual.ts
+  backend/package.json             минус node-telegram-bot-api
+  backend/package-lock.json
+
+После распаковки:
+  cd backend
+  npm install
+  npm run build && npm run start:prod    # проверить прод-сборку
