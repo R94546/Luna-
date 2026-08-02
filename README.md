@@ -19,27 +19,33 @@ SaaS для управления обувным производственным
 ```
 Luna/
 ├── docs/                            # техническая документация
-├── backend/                         # NestJS API
-│   ├── prisma/
-│   │   ├── schema.prisma            # источник правды по схеме БД
-│   │   ├── seed.ts                  # демо-данные для разработки
-│   │   └── sql/002_constraints.sql  # CHECK, partial-индексы, триггер склада, RLS
-│   ├── src/
-│   │   ├── config/                  # валидация переменных окружения (zod)
-│   │   ├── prisma/                  # PrismaService + изоляция арендаторов
-│   │   ├── common/                  # guards, filters, pipes, decorators, i18n
-│   │   └── modules/
-│   │       ├── auth/                # регистрация, вход, refresh-ротация
-│   │       ├── employees/           # сотрудники + привязка Telegram
-│   │       ├── operations/          # виды работ
-│   │       ├── piece-rates/         # сдельные расценки
-│   │       ├── products/            # модели обуви
-│   │       ├── stock/               # журнал движений склада
-│   │       ├── telegram/            # бот для рабочих (grammY)
-│   │       └── work-logs/           # учёт выработки
-│   └── test/
-└── app/                             # Flutter-приложение (следующая итерация)
+└── backend/                         # NestJS API
+    ├── prisma/
+    │   ├── schema.prisma            # источник правды по схеме БД
+    │   ├── seed.ts                  # демо-данные для разработки
+    │   └── sql/002_constraints.sql  # CHECK, partial-индексы, триггер склада, RLS
+    ├── src/
+    │   ├── config/                  # валидация переменных окружения (zod)
+    │   ├── prisma/                  # PrismaService + изоляция арендаторов
+    │   ├── common/                  # guards, filters, pipes, decorators, i18n
+    │   └── modules/
+    │       ├── auth/                # регистрация, вход, refresh-ротация
+    │       ├── employees/           # сотрудники + привязка Telegram
+    │       ├── operations/          # виды работ
+    │       ├── piece-rates/         # сдельные расценки
+    │       ├── products/            # модели обуви
+    │       ├── stock/               # журнал движений склада
+    │       ├── telegram/            # бот для рабочих (grammY)
+    │       │   ├── handlers/        # сценарии: /start, отчёт, сводки
+    │       │   ├── telegram.service.ts          # жизненный цикл, идемпотентность, авторизация
+    │       │   ├── telegram-session.service.ts  # состояние незавершённых диалогов
+    │       │   ├── telegram.utils.ts            # общий guard, меню, разбор ошибок
+    │       │   └── bot-texts.ts     # тексты бота
+    │       └── work-logs/           # учёт выработки
+    └── test/                        # ручные сценарии проверок (*.manual.ts)
 ```
+
+Flutter-приложение (`app/`) — следующая итерация, кода пока нет.
 
 ## Статус
 
@@ -80,18 +86,37 @@ npm run start:dev             # http://localhost:3000/api/v1
 
 ### Проверочные сценарии
 
+Автоматических тестов пока нет — проверки оформлены как сценарии в `test/`,
+которые запускаются вручную на живой БД и печатают результат построчно.
+Каждому нужен применённый seed.
+
 Изоляция арендаторов — самый критичный механизм системы: данные одного цеха
 не должны быть видны другому.
 
 ```bash
-DATABASE_URL=... npx ts-node test/tenant-isolation.manual.ts
+npm run test:tenant
 ```
 
 Полный сценарий Telegram-бота без обращения к серверам Telegram: привязка
 по коду, отчёт о выработке, идемпотентность ретраев, сводки, отмена.
 
 ```bash
-DATABASE_URL=... npx ts-node test/telegram-flow.manual.ts
+npm run test:telegram
+```
+
+Уборка счётчиков лимита и просроченных диалогов — проверка, что хранилища
+в памяти не растут бесконечно. БД не требуется.
+
+```bash
+npm run test:cleanup
+```
+
+### Проверки кода
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint        # ESLint 9, flat-config
+npm run build       # nest build
 ```
 
 ### Telegram-бот
