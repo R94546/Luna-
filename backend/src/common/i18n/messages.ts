@@ -50,6 +50,9 @@ const uz: Dict = {
   'validation.password_required': 'Parolni kiriting',
   'validation.required': 'Majburiy maydon',
   'validation.positive': "Qiymat noldan katta bo'lishi kerak",
+  'validation.date_format': 'Sana YYYY-MM-DD koʻrinishida boʻlishi kerak',
+  'validation.period_order': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
+  'validation.nothing_to_update': "O'zgartirish uchun hech narsa yuborilmadi",
 
   // Склад и товары
   // Без кавычек вокруг {productName}: названия моделей часто содержат
@@ -61,6 +64,7 @@ const uz: Dict = {
   'error.work_log_not_pending': 'Faqat tasdiqlanmagan yozuvni tahrirlash mumkin',
   'error.work_log_in_payroll': "Bu yozuv ish haqi davriga kiritilgan — o'zgartirib bo'lmaydi",
   'error.period_already_closed': 'Ish haqi davri allaqachon yopilgan',
+  'error.period_overlap': 'Bu sanalar {from} — {to} davri bilan kesishadi',
   'error.rate_not_found': "«{operation}» amali uchun narx belgilanmagan",
 
   // Заказы
@@ -105,6 +109,9 @@ const ru: Dict = {
   'validation.password_required': 'Введите пароль',
   'validation.required': 'Обязательное поле',
   'validation.positive': 'Значение должно быть больше нуля',
+  'validation.date_format': 'Дата должна быть в формате ГГГГ-ММ-ДД',
+  'validation.period_order': 'Конец периода не может быть раньше начала',
+  'validation.nothing_to_update': 'Не передано ни одного поля для изменения',
 
   // Склад и товары
   'error.insufficient_stock': 'На складе только {available} пар модели {productName}',
@@ -114,6 +121,7 @@ const ru: Dict = {
   'error.work_log_not_pending': 'Изменить можно только неподтверждённую запись',
   'error.work_log_in_payroll': 'Запись вошла в зарплатный период — изменить нельзя',
   'error.period_already_closed': 'Зарплатный период уже закрыт',
+  'error.period_overlap': 'Эти даты пересекаются с периодом {from} — {to}',
   'error.rate_not_found': 'Для операции «{operation}» не задана расценка',
 
   // Заказы
