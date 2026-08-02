@@ -61,6 +61,9 @@ export const Errors = {
   periodAlreadyClosed: () =>
     new AppException(422, 'PERIOD_ALREADY_CLOSED', 'error.period_already_closed'),
 
+  periodOverlap: (from: string, to: string) =>
+    new AppException(422, 'PERIOD_OVERLAP', 'error.period_overlap', { from, to }, { from, to }),
+
   rateNotFound: (operation: string) =>
     new AppException(422, 'RATE_NOT_FOUND', 'error.rate_not_found', { operation }),
 
