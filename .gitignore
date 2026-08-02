@@ -39,3 +39,5 @@ logs/
 # ОС
 .DS_Store
 Thumbs.db
+
+temp-fix/
