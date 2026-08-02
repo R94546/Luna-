@@ -1,8 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Interval } from '@nestjs/schedule';
 import { Employee } from '@prisma/client';
 import { Bot, Context } from 'grammy';
 import { Update } from 'grammy/types';
+import { createHash } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { runWithTenant } from '../../prisma/tenant-context';
 import { texts } from './bot-texts';
@@ -12,6 +14,8 @@ import { SummaryHandler } from './handlers/summary.handler';
 import { EmployeeGuard } from './telegram.utils';
 
 const RATE_LIMIT_PER_MIN = 30;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_CLEANUP_MS = 5 * 60_000;
 
 /**
  * Оркестрация Telegram-бота.
@@ -49,18 +53,45 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     const webhookUrl = this.config.get<string>('TELEGRAM_WEBHOOK_URL', '');
 
-    if (webhookUrl) {
-      const secret = this.config.get<string>('TELEGRAM_WEBHOOK_SECRET', '');
-      await this.bot.api.setWebhook(`${webhookUrl}/api/v1/telegram/webhook/${secret}`, {
-        secret_token: secret || undefined,
-      });
-      await this.bot.init();
-      this.logger.log('Бот работает в режиме webhook');
-    } else {
-      // Polling только для разработки: при нескольких инстансах апдейты
-      // начнут расходиться по процессам случайным образом.
-      void this.bot.start({ onStart: () => this.logger.log('Бот работает в режиме polling') });
+    // Недоступность Telegram не должна ронять весь API: касса, склад
+    // и заказы обязаны работать, даже когда бот не поднялся.
+    try {
+      if (webhookUrl) {
+        const secret = this.config.get<string>('TELEGRAM_WEBHOOK_SECRET', '');
+        await this.bot.api.setWebhook(`${webhookUrl}/api/v1/telegram/webhook/${secret}`, {
+          secret_token: secret || undefined,
+        });
+        await this.bot.init();
+        this.logger.log('Бот работает в режиме webhook');
+      } else {
+        this.startPolling(this.bot);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Не удалось запустить бота: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
+  }
+
+  /**
+   * Polling только для разработки: при нескольких инстансах апдейты
+   * начнут расходиться по процессам случайным образом.
+   *
+   * `bot.start()` не завершается, пока бот работает, поэтому его нельзя
+   * ждать здесь — иначе onModuleInit не отдаст управление и приложение
+   * не поднимется. Но и оставлять промис без обработчика нельзя: упавший
+   * polling молча прекратил бы приём сообщений, а в логах было бы пусто.
+   */
+  private startPolling(bot: Bot): void {
+    bot
+      .start({ onStart: () => this.logger.log('Бот работает в режиме polling') })
+      .catch((error: unknown) => {
+        this.logger.error(
+          `Polling остановлен с ошибкой: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      });
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -144,7 +175,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     if (!tgId) return;
 
     if (!this.checkRateLimit(tgId)) {
-      this.logger.warn(`Превышен лимит сообщений от Telegram ID ${tgId}`);
+      this.logger.warn(`Превышен лимит сообщений от ${this.maskTgId(tgId)}`);
       return;
     }
 
@@ -165,11 +196,44 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     const entry = this.rateLimits.get(tgId);
 
     if (!entry || now > entry.resetAt) {
-      this.rateLimits.set(tgId, { count: 1, resetAt: now + 60_000 });
+      this.rateLimits.set(tgId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
       return true;
     }
 
     entry.count += 1;
     return entry.count <= RATE_LIMIT_PER_MIN;
+  }
+
+  /**
+   * Уборка счётчиков.
+   *
+   * Без неё Map растёт на каждого написавшего боту и никогда не уменьшается:
+   * запись живёт минуту, а занимает память до перезапуска процесса. На
+   * длинной дистанции это утечка, пусть и медленная.
+   */
+  @Interval(RATE_LIMIT_CLEANUP_MS)
+  cleanupRateLimits(): void {
+    const now = Date.now();
+    let removed = 0;
+
+    for (const [tgId, entry] of this.rateLimits) {
+      if (now > entry.resetAt) {
+        this.rateLimits.delete(tgId);
+        removed++;
+      }
+    }
+
+    if (removed > 0) {
+      this.logger.debug(`Очищено счётчиков лимита: ${removed}`);
+    }
+  }
+
+  /**
+   * Telegram ID в логи в открытом виде не пишем: это идентификатор
+   * конкретного человека. Хеш стабилен, поэтому по нему всё ещё можно
+   * связать между собой события одного отправителя при разборе инцидента.
+   */
+  private maskTgId(tgId: number): string {
+    return `tg:${createHash('sha256').update(String(tgId)).digest('hex').slice(0, 8)}`;
   }
 }

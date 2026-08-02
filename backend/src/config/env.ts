@@ -11,7 +11,8 @@ const envSchema = z.object({
   CORS_ORIGINS: z.string().default('*'),
 
   DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url(),
+  // Пустая строка допустима: очередей пока нет, Redis не нужен для запуска.
+  REDIS_URL: z.union([z.string().url(), z.literal('')]).default(''),
 
   JWT_SECRET: z.string().min(32, 'JWT_SECRET должен быть не короче 32 символов'),
   JWT_ACCESS_TTL: z.string().default('15m'),

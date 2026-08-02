@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 
 /** Шаг диалога. Между сообщениями бот помнит, чего он ждёт от рабочего. */
 export type Step = 'idle' | 'awaiting_quantity';
@@ -11,6 +12,7 @@ export interface Session {
 }
 
 const SESSION_TTL_MS = 30 * 60_000;
+const SESSION_CLEANUP_MS = 10 * 60_000;
 
 /**
  * Состояние незавершённых диалогов.
@@ -23,6 +25,7 @@ const SESSION_TTL_MS = 30 * 60_000;
  */
 @Injectable()
 export class TelegramSessionService {
+  private readonly logger = new Logger(TelegramSessionService.name);
   private readonly sessions = new Map<number, Session>();
 
   /** Возвращает живую сессию либо заводит новую, если прежняя протухла. */
@@ -41,5 +44,34 @@ export class TelegramSessionService {
 
   clear(tgId: number): void {
     this.sessions.delete(tgId);
+  }
+
+  /**
+   * Уборка протухших диалогов.
+   *
+   * `get()` подменяет протухшую сессию новой, но только когда тот же
+   * рабочий напишет снова. Бросивший диалог на середине не возвращается —
+   * и его запись остаётся в памяти навсегда.
+   */
+  @Interval(SESSION_CLEANUP_MS)
+  cleanupExpired(): void {
+    const now = Date.now();
+    let removed = 0;
+
+    for (const [tgId, session] of this.sessions) {
+      if (now - session.updatedAt >= SESSION_TTL_MS) {
+        this.sessions.delete(tgId);
+        removed++;
+      }
+    }
+
+    if (removed > 0) {
+      this.logger.debug(`Очищено просроченных сессий: ${removed}`);
+    }
+  }
+
+  /** Размер хранилища — для диагностики и тестов. */
+  get size(): number {
+    return this.sessions.size;
   }
 }

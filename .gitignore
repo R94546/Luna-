@@ -39,3 +39,8 @@ logs/
 # ОС
 .DS_Store
 Thumbs.db
+
+temp-fix/
+next-fix/
+check-fix/
+telegram-fixes/
