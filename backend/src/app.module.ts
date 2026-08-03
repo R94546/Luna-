@@ -10,6 +10,7 @@ import { TenantInterceptor } from './common/guards/tenant.guard';
 import { IdempotencyInterceptor } from './common/idempotency/idempotency.interceptor';
 import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { validateEnv } from './config/env';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CashModule } from './modules/cash/cash.module';
 import { CustomersModule } from './modules/customers/customers.module';
@@ -46,6 +47,7 @@ import { PrismaModule } from './prisma/prisma.module';
     CustomersModule,
     SalesModule,
     OrdersModule,
+    AnalyticsModule,
     TelegramModule,
   ],
   providers: [
