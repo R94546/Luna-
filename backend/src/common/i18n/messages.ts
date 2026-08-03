@@ -68,6 +68,9 @@ const uz: Dict = {
   'error.work_log_in_payroll': "Bu yozuv ish haqi davriga kiritilgan — o'zgartirib bo'lmaydi",
   'error.period_already_closed': 'Ish haqi davri allaqachon yopilgan',
   'error.period_overlap': 'Bu sanalar {from} — {to} davri bilan kesishadi',
+  'error.idempotency_key_reused':
+    "Bu kalit boshqa ma'lumot bilan ishlatilgan — yangi urinish uchun yangi kalit kerak",
+  'error.idempotency_in_progress': "Avvalgi so'rov hali bajarilmoqda, biroz kuting",
   'error.rate_not_found': "«{operation}» amali uchun narx belgilanmagan",
 
   // Заказы
@@ -128,6 +131,9 @@ const ru: Dict = {
   'error.work_log_in_payroll': 'Запись вошла в зарплатный период — изменить нельзя',
   'error.period_already_closed': 'Зарплатный период уже закрыт',
   'error.period_overlap': 'Эти даты пересекаются с периодом {from} — {to}',
+  'error.idempotency_key_reused':
+    'Этот ключ уже использован с другими данными — для новой попытки нужен новый ключ',
+  'error.idempotency_in_progress': 'Предыдущий запрос ещё выполняется, подождите немного',
   'error.rate_not_found': 'Для операции «{operation}» не задана расценка',
 
   // Заказы

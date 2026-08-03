@@ -32,6 +32,7 @@ export const TENANT_MODELS = new Set<string>([
   'CostCalculation',
   'Notification',
   'AuditLog',
+  'IdempotencyKey',
 ]);
 
 /** Операции, у которых company_id нужно дописать в data, а не в where. */

@@ -162,6 +162,7 @@ model Company {
   linkCodes         TelegramLinkCode[]
   counters          CompanyCounter[]
   auditLogs         AuditLog[]
+  idempotencyKeys   IdempotencyKey[]
 
   @@index([status])
   @@map("companies")
@@ -305,6 +306,39 @@ model TelegramUpdate {
 
   @@index([processedAt])
   @@map("telegram_updates")
+}
+
+/// Результат уже выполненной денежной операции, чтобы повтор не создал вторую.
+///
+/// Мобильная сеть в цехе отваливается на середине запроса: пользователь видит
+/// ошибку, жмёт «Сохранить» ещё раз, а первый запрос на сервере уже прошёл.
+/// Без этой таблицы в кассе оказались бы две одинаковые продажи.
+model IdempotencyKey {
+  id        String @id @default(uuid()) @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+
+  /// UUID, сгенерированный клиентом на экране ввода — один на попытку.
+  key      String @db.VarChar(128)
+  /// Путь эндпоинта: один и тот же ключ на разных операциях не пересекается.
+  endpoint String @db.VarChar(64)
+
+  /// Хеш тела запроса. Тот же ключ с другим телом — ошибка клиента,
+  /// а не повтор: молча вернуть чужой результат было бы хуже отказа.
+  requestHash String @map("request_hash") @db.VarChar(64)
+
+  /// null, пока обработчик выполняется. Отличает «идёт прямо сейчас»
+  /// от «уже готово» при двух одновременных нажатиях.
+  statusCode Int?  @map("status_code")
+  response   Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, endpoint, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }
 
 // ============================================================

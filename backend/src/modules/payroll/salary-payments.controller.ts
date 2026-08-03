@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AuthUser, CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Idempotent } from '../../common/decorators/idempotent.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -31,6 +32,7 @@ export class SalaryPaymentsController {
   }
 
   @Post()
+  @Idempotent()
   create(
     @Body(new ZodValidationPipe(createSalaryPaymentSchema)) dto: CreateSalaryPaymentDto,
     @CurrentUser() user: AuthUser,
