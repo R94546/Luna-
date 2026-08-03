@@ -59,6 +59,7 @@ const uz: Dict = {
   'validation.items_required': 'Kamida bitta qator qoʻshing',
   'validation.cash_account_required': 'Kassani tanlang',
   'validation.sale_only_on_issue': 'Savdo faqat buyurtma berilganda rasmiylashtiriladi',
+  'validation.both_dates_required': 'Davr uchun ikkala sanani ham koʻrsating',
 
   // Склад и товары
   // Без кавычек вокруг {productName}: названия моделей часто содержат
@@ -130,6 +131,7 @@ const ru: Dict = {
   'validation.items_required': 'Добавьте хотя бы одну позицию',
   'validation.cash_account_required': 'Выберите кассу',
   'validation.sale_only_on_issue': 'Продажа оформляется только при выдаче заказа',
+  'validation.both_dates_required': 'Укажите обе даты периода',
 
   // Склад и товары
   'error.insufficient_stock': 'На складе только {available} пар модели {productName}',
