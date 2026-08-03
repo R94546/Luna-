@@ -11,6 +11,7 @@ import { validateEnv } from './config/env';
 import { AuthModule } from './modules/auth/auth.module';
 import { CashModule } from './modules/cash/cash.module';
 import { EmployeesModule } from './modules/employees/employees.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { PieceRatesModule } from './modules/piece-rates/piece-rates.module';
@@ -35,6 +36,7 @@ import { PrismaModule } from './prisma/prisma.module';
     WorkLogsModule,
     CashModule,
     PayrollModule,
+    ExpensesModule,
     TelegramModule,
   ],
   providers: [

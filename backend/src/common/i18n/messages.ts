@@ -53,6 +53,9 @@ const uz: Dict = {
   'validation.date_format': 'Sana YYYY-MM-DD koʻrinishida boʻlishi kerak',
   'validation.period_order': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
   'validation.nothing_to_update': "O'zgartirish uchun hech narsa yuborilmadi",
+  'validation.category_not_manual':
+    "Bu turdagi harakat qo'lda kiritilmaydi — o'z bo'limidan foydalaning",
+  'validation.color_format': 'Rang #RRGGBB koʻrinishida boʻlishi kerak',
 
   // Склад и товары
   // Без кавычек вокруг {productName}: названия моделей часто содержат
@@ -112,6 +115,9 @@ const ru: Dict = {
   'validation.date_format': 'Дата должна быть в формате ГГГГ-ММ-ДД',
   'validation.period_order': 'Конец периода не может быть раньше начала',
   'validation.nothing_to_update': 'Не передано ни одного поля для изменения',
+  'validation.category_not_manual':
+    'Такое движение вручную не заводится — используйте профильный раздел',
+  'validation.color_format': 'Цвет должен быть в формате #RRGGBB',
 
   // Склад и товары
   'error.insufficient_stock': 'На складе только {available} пар модели {productName}',
@@ -132,7 +138,14 @@ const ru: Dict = {
   'error.link_code_invalid': 'Код неверный или просрочен',
 };
 
-const dictionaries: Record<Lang, Dict> = { uz, ru };
+/**
+ * Экспортируется ради проверки состава.
+ *
+ * Через `t()` пропажу перевода не поймать: она откатывается на язык по
+ * умолчанию, и русский ключ, которого нет, вернёт узбекский текст —
+ * работающий, но не переведённый. Сверять надо сами словари.
+ */
+export const dictionaries: Record<Lang, Dict> = { uz, ru };
 
 /**
  * Переводит ключ, подставляя параметры вида {name}.

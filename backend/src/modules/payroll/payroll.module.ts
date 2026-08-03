@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CashModule } from '../cash/cash.module';
 import { PayrollController } from './payroll.controller';
 import { PayrollService } from './payroll.service';
 import { SalaryPaymentsController } from './salary-payments.controller';
@@ -12,6 +13,7 @@ import { SalaryPaymentsService } from './salary-payments.service';
  * появится либо циклическая зависимость, либо третий модуль-посредник.
  */
 @Module({
+  imports: [CashModule],
   controllers: [PayrollController, SalaryPaymentsController],
   providers: [PayrollService, SalaryPaymentsService],
   exports: [PayrollService],
