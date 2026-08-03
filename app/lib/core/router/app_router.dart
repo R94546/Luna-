@@ -5,8 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
-import '../../features/dashboard/presentation/dashboard_screen.dart';
-import '../widgets/placeholder_screen.dart';
+import 'home_shell.dart';
 
 part 'app_router.g.dart';
 
@@ -15,15 +14,14 @@ class Routes {
 
   static const splash = '/';
   static const login = '/login';
-  static const dashboard = '/dashboard';
-  static const soon = '/soon';
+  static const home = '/home';
 }
 
-/// Роутер с редиректом по состоянию сессии и роли.
+/// Роутер с редиректом по состоянию сессии.
 ///
-/// Роль важна не меньше факта входа: дашборд на бэкенде помечен
-/// `@Roles(UserRole.OWNER)`, и отправить туда мастера значит показать ему
-/// 403 сразу после успешного логина.
+/// Внутри приложения навигация идёт вкладками HomeShell, а не маршрутами:
+/// состав разделов зависит от роли, и описывать его ветками роутера значит
+/// пересобирать роутер на каждую смену пользователя.
 @riverpod
 GoRouter appRouter(Ref ref) {
   final session = ref.watch(sessionControllerProvider);
@@ -37,11 +35,7 @@ GoRouter appRouter(Ref ref) {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginScreen()),
-      GoRoute(
-        path: Routes.dashboard,
-        builder: (_, _) => const DashboardScreen(),
-      ),
-      GoRoute(path: Routes.soon, builder: (_, _) => const PlaceholderScreen()),
+      GoRoute(path: Routes.home, builder: (_, _) => const HomeShell()),
     ],
     redirect: (_, state) {
       // Пока сессию проверяем на сервере, держим заставку: увести на экран
@@ -57,22 +51,7 @@ GoRouter appRouter(Ref ref) {
         return state.matchedLocation == Routes.login ? null : Routes.login;
       }
 
-      final home = user.role.canSeeDashboard ? Routes.dashboard : Routes.soon;
-
-      // С заставки и экрана входа вошедшего уводим на его домашний экран.
-      if (state.matchedLocation == Routes.splash ||
-          state.matchedLocation == Routes.login) {
-        return home;
-      }
-
-      // Мастер или бухгалтер, попавший на дашборд, получил бы 403 —
-      // возвращаем на доступный ему экран.
-      if (state.matchedLocation == Routes.dashboard &&
-          !user.role.canSeeDashboard) {
-        return Routes.soon;
-      }
-
-      return null;
+      return state.matchedLocation == Routes.home ? null : Routes.home;
     },
   );
 }
