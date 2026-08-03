@@ -7,6 +7,8 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantInterceptor } from './common/guards/tenant.guard';
+import { IdempotencyInterceptor } from './common/idempotency/idempotency.interceptor';
+import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { validateEnv } from './config/env';
 import { AuthModule } from './modules/auth/auth.module';
 import { CashModule } from './modules/cash/cash.module';
@@ -27,6 +29,7 @@ import { PrismaModule } from './prisma/prisma.module';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
     ScheduleModule.forRoot(),
     PrismaModule,
+    IdempotencyModule,
     AuthModule,
     EmployeesModule,
     OperationsModule,
@@ -51,6 +54,10 @@ import { PrismaModule } from './prisma/prisma.module';
     // Интерцептор ставит tenant-контекст ПОСЛЕ guard'ов, когда request.user
     // уже заполнен, и держит его на всё время обработки запроса.
     { provide: APP_INTERCEPTOR, useClass: TenantInterceptor },
+
+    // Строго после TenantInterceptor: ключи идемпотентности хранятся
+    // по компаниям, и без контекста запрос к ним не отфильтруется.
+    { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
   ],
 })
 export class AppModule {}

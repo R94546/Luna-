@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AuthUser, CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Idempotent } from '../../common/decorators/idempotent.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -35,6 +36,7 @@ export class ExpensesController {
   /** Мастеру расход завести можно: он покупает фурнитуру в течение дня. */
   @Post()
   @Roles(UserRole.ADMIN, UserRole.ACCOUNTANT)
+  @Idempotent()
   create(
     @Body(new ZodValidationPipe(createExpenseSchema)) dto: CreateExpenseDto,
     @CurrentUser() user: AuthUser,

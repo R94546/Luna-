@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AuthUser, CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Idempotent } from '../../common/decorators/idempotent.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -45,6 +46,7 @@ export class CashController {
   }
 
   @Post('transactions')
+  @Idempotent()
   createTransaction(
     @Body(new ZodValidationPipe(createTransactionSchema)) dto: CreateTransactionDto,
     @CurrentUser() user: AuthUser,
