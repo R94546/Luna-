@@ -23,6 +23,8 @@ export interface MovementInput {
   /** 'sale' | 'expense' | 'salary_payment' | 'manual' */
   refType: string;
   refId?: string;
+  /** Прямая ссылка на продажу — по ней сводка отделяет выручку от прочего. */
+  saleId?: string;
   note?: string;
   userId?: string;
 }
@@ -272,6 +274,7 @@ export class CashService {
         amount: input.amount,
         refType: input.refType,
         refId: input.refId,
+        saleId: input.saleId,
         occurredAt: input.occurredAt,
         note: input.note,
         createdById: input.userId,

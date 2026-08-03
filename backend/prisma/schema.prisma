@@ -202,6 +202,7 @@ model User {
   approvedWorkLogs     WorkLog[]         @relation("WorkLogApprover")
   createdOrders        Order[]           @relation("OrderCreator")
   createdSales         Sale[]            @relation("SaleCreator")
+  cancelledSales       Sale[]            @relation("SaleCanceller")
   createdExpenses      Expense[]         @relation("ExpenseCreator")
   createdCashTx        CashTransaction[] @relation("CashTxCreator")
   createdStockMoves    StockMovement[]   @relation("StockMoveCreator")
@@ -686,14 +687,23 @@ model Sale {
   note        String?  @db.VarChar(255)
   createdById String?  @map("created_by_id") @db.Uuid
 
+  /// Сторно. Продажа не удаляется: она документ перед покупателем, и её
+  /// история переписываться не должна. Возврат товара и обратная проводка
+  /// в кассе идут отдельными записями, а здесь остаётся отметка, чтобы
+  /// выручка и прибыль перестали её учитывать.
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  cancelledById String?   @map("cancelled_by_id") @db.Uuid
+  cancelReason  String?   @map("cancel_reason") @db.VarChar(255)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  company   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  customer  Customer?         @relation(fields: [customerId], references: [id])
-  order     Order?            @relation(fields: [orderId], references: [id])
-  createdBy User?             @relation("SaleCreator", fields: [createdById], references: [id])
-  items     SaleItem[]
-  cashTx    CashTransaction[]
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer    Customer?         @relation(fields: [customerId], references: [id])
+  order       Order?            @relation(fields: [orderId], references: [id])
+  createdBy   User?             @relation("SaleCreator", fields: [createdById], references: [id])
+  cancelledBy User?             @relation("SaleCanceller", fields: [cancelledById], references: [id])
+  items       SaleItem[]
+  cashTx      CashTransaction[]
 
   @@unique([companyId, saleNumber])
   @@index([companyId, soldAt(sort: Desc)])
