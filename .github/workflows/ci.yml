@@ -37,3 +37,31 @@ jobs:
       # с применённым seed. Поднимать её ради текущего набора проверок
       # дороже, чем прогонять их вручную перед релизом.
       - run: npm test
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.6'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Сгенерированный код (freezed, json_serializable, riverpod) в
+      # репозиторий не коммитится — иначе каждый PR тонул бы в диффах
+      # машинных файлов, а конфликты пришлось бы разрешать вручную.
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      - run: dart format --set-exit-if-changed lib test
+
+      - run: flutter analyze
+
+      - run: flutter test
