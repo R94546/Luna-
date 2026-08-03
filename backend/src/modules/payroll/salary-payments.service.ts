@@ -4,6 +4,7 @@ import { PaginationDto, paginate } from '../../common/dto/pagination.dto';
 import { Errors } from '../../common/filters/app.exception';
 import { PrismaService } from '../../prisma/prisma.service';
 import { requireTenant } from '../../prisma/tenant-context';
+import { CashService } from '../cash/cash.service';
 import { CreateSalaryPaymentDto, ListSalaryPaymentsDto } from './dto/payroll.dto';
 import { PayrollService } from './payroll.service';
 
@@ -15,6 +16,7 @@ export class SalaryPaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payroll: PayrollService,
+    private readonly cash: CashService,
   ) {}
 
   async findAll(dto: ListSalaryPaymentsDto & PaginationDto) {
@@ -98,32 +100,24 @@ export class SalaryPaymentsService {
         },
       });
 
-      const transaction = await tx.cashTransaction.create({
-        data: {
-          companyId,
-          accountId: account.id,
-          direction: CashDirection.OUT,
-          category: CashCategory.SALARY,
-          amount,
-          refType: REF_TYPE,
-          refId: payment.id,
-          occurredAt: paidAt,
-          note: dto.note ?? this.defaultNote(dto.type, employee.fullName),
-          createdById: userId,
-        },
+      // Движение по кассе — через общий механизм: он один и тот же для
+      // зарплаты, расхода и продажи, и баланс с журналом не могут разойтись,
+      // пока никто не трогает `balance` мимо него.
+      const transactionId = await this.cash.recordMovement(tx, {
+        accountId: account.id,
+        direction: CashDirection.OUT,
+        category: CashCategory.SALARY,
+        amount,
+        occurredAt: paidAt,
+        refType: REF_TYPE,
+        refId: payment.id,
+        note: dto.note ?? this.defaultNote(dto.type, employee.fullName),
+        userId,
       });
 
       await tx.salaryPayment.update({
         where: { id: payment.id },
-        data: { cashTransactionId: transaction.id },
-      });
-
-      // Баланс денормализован ради сводки по кассе; decrement — атомарный
-      // инкремент на стороне БД, две одновременные выплаты не затрут
-      // изменения друг друга.
-      await tx.cashAccount.update({
-        where: { id: account.id },
-        data: { balance: { decrement: amount } },
+        data: { cashTransactionId: transactionId },
       });
 
       if (entryId) {

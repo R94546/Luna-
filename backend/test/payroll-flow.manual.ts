@@ -13,14 +13,16 @@
  *   npm run test:payroll
  */
 import { Prisma, SalaryPaymentType, WorkLogStatus } from '@prisma/client';
+import { CashService } from '../src/modules/cash/cash.service';
 import { PayrollService } from '../src/modules/payroll/payroll.service';
 import { SalaryPaymentsService } from '../src/modules/payroll/salary-payments.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { runWithTenant } from '../src/prisma/tenant-context';
 
 const prisma = new PrismaService();
+const cash = new CashService(prisma);
 const payroll = new PayrollService(prisma);
-const payments = new SalaryPaymentsService(prisma, payroll);
+const payments = new SalaryPaymentsService(prisma, payroll, cash);
 
 /** Период 2019 года — заведомо вне демо-данных и вне реальной работы цеха. */
 const PERIOD_START = '2019-03-01';

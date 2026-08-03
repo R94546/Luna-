@@ -33,6 +33,9 @@ export const Errors = {
   notFound: (entity: string) =>
     new AppException(404, 'NOT_FOUND', 'error.not_found', { entity }),
 
+  duplicate: (field: string) =>
+    new AppException(409, 'DUPLICATE', 'error.duplicate', { field }, { field }),
+
   forbiddenRole: () => new AppException(403, 'FORBIDDEN_ROLE', 'error.forbidden_role'),
 
   subscriptionExpired: () =>
