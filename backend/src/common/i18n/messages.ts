@@ -56,6 +56,9 @@ const uz: Dict = {
   'validation.category_not_manual':
     "Bu turdagi harakat qo'lda kiritilmaydi — o'z bo'limidan foydalaning",
   'validation.color_format': 'Rang #RRGGBB koʻrinishida boʻlishi kerak',
+  'validation.items_required': 'Kamida bitta qator qoʻshing',
+  'validation.cash_account_required': 'Kassani tanlang',
+  'validation.sale_only_on_issue': 'Savdo faqat buyurtma berilganda rasmiylashtiriladi',
 
   // Склад и товары
   // Без кавычек вокруг {productName}: названия моделей часто содержат
@@ -73,8 +76,11 @@ const uz: Dict = {
   'error.idempotency_in_progress': "Avvalgi so'rov hali bajarilmoqda, biroz kuting",
   'error.rate_not_found': "«{operation}» amali uchun narx belgilanmagan",
 
-  // Заказы
+  // Заказы и продажи
   'error.invalid_status_transition': "Buyurtmani «{from}» holatidan «{to}» holatiga o'tkazib bo'lmaydi",
+  'error.discount_too_large': 'Chegirma savdo summasidan katta boʻlishi mumkin emas',
+  'error.paid_exceeds_total': 'Toʻlangan summa savdo summasidan katta boʻlishi mumkin emas',
+  'error.sale_already_cancelled': 'Bu savdo allaqachon bekor qilingan',
 
   // Telegram
   'error.telegram_already_linked': 'Bu Telegram hisobi boshqa xodimga biriktirilgan',
@@ -121,6 +127,9 @@ const ru: Dict = {
   'validation.category_not_manual':
     'Такое движение вручную не заводится — используйте профильный раздел',
   'validation.color_format': 'Цвет должен быть в формате #RRGGBB',
+  'validation.items_required': 'Добавьте хотя бы одну позицию',
+  'validation.cash_account_required': 'Выберите кассу',
+  'validation.sale_only_on_issue': 'Продажа оформляется только при выдаче заказа',
 
   // Склад и товары
   'error.insufficient_stock': 'На складе только {available} пар модели {productName}',
@@ -136,8 +145,11 @@ const ru: Dict = {
   'error.idempotency_in_progress': 'Предыдущий запрос ещё выполняется, подождите немного',
   'error.rate_not_found': 'Для операции «{operation}» не задана расценка',
 
-  // Заказы
+  // Заказы и продажи
   'error.invalid_status_transition': 'Нельзя перевести заказ из статуса «{from}» в «{to}»',
+  'error.discount_too_large': 'Скидка не может быть больше суммы продажи',
+  'error.paid_exceeds_total': 'Оплачено не может быть больше суммы продажи',
+  'error.sale_already_cancelled': 'Эта продажа уже сторнирована',
 
   // Telegram
   'error.telegram_already_linked': 'Этот Telegram-аккаунт привязан к другому сотруднику',

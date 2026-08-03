@@ -12,9 +12,12 @@ import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { validateEnv } from './config/env';
 import { AuthModule } from './modules/auth/auth.module';
 import { CashModule } from './modules/cash/cash.module';
+import { CustomersModule } from './modules/customers/customers.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { OperationsModule } from './modules/operations/operations.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { SalesModule } from './modules/sales/sales.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { PieceRatesModule } from './modules/piece-rates/piece-rates.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -40,6 +43,9 @@ import { PrismaModule } from './prisma/prisma.module';
     CashModule,
     PayrollModule,
     ExpensesModule,
+    CustomersModule,
+    SalesModule,
+    OrdersModule,
     TelegramModule,
   ],
   providers: [
