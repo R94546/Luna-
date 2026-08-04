@@ -5,7 +5,9 @@ import '../../features/auth/domain/user_role.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
 import '../../features/cash/presentation/cash_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/orders/presentation/orders_screen.dart';
 import '../../features/payroll/presentation/payroll_screen.dart';
+import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/work_logs/presentation/work_logs_screen.dart';
 
 /// Раздел приложения в нижней навигации.
@@ -56,9 +58,22 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         selectedIcon: Icons.assignment,
         screen: WorkLogsScreen(),
       ),
-      // Зарплата и касса — зона владельца и бухгалтера. Мастер их не видит:
-      // на бэкенде эти эндпоинты ему закрыты.
+      // Заказы ведёт мастер: это про производство, а не про деньги.
+      const _Section(
+        label: 'Заказы',
+        icon: Icons.receipt_long_outlined,
+        selectedIcon: Icons.receipt_long,
+        screen: OrdersScreen(),
+      ),
+      // Зарплата, продажи и касса — зона владельца и бухгалтера. Мастер их
+      // не видит: на бэкенде эти эндпоинты ему закрыты.
       if (role?.canSeeMoney ?? false) ...[
+        const _Section(
+          label: 'Продажи',
+          icon: Icons.point_of_sale_outlined,
+          selectedIcon: Icons.point_of_sale,
+          screen: SalesScreen(),
+        ),
         const _Section(
           label: 'Зарплата',
           icon: Icons.payments_outlined,
@@ -93,18 +108,100 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       // Одна вкладка — это не навигация, а лишняя полоса внизу.
       bottomNavigationBar: sections.length < 2
           ? null
-          : NavigationBar(
-              selectedIndex: index,
-              onDestinationSelected: (value) => setState(() => _index = value),
-              destinations: [
-                for (final section in sections)
-                  NavigationDestination(
-                    icon: Icon(section.icon),
-                    selectedIcon: Icon(section.selectedIcon),
-                    label: section.label,
-                  ),
-              ],
+          : _BottomBar(
+              sections: sections,
+              index: index,
+              onSelected: (value) => setState(() => _index = value),
             ),
+    );
+  }
+}
+
+/// Нижняя навигация.
+///
+/// Больше пяти иконок в ряд на телефоне не помещаются: подписи обрезаются
+/// и попасть пальцем становится трудно. Поэтому при шести и более разделах
+/// последняя кнопка превращается в «Ещё» со списком остальных.
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.sections,
+    required this.index,
+    required this.onSelected,
+  });
+
+  final List<_Section> sections;
+  final int index;
+  final ValueChanged<int> onSelected;
+
+  static const _maxVisible = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sections.length <= _maxVisible) {
+      return NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: onSelected,
+        destinations: [
+          for (final section in sections)
+            NavigationDestination(
+              icon: Icon(section.icon),
+              selectedIcon: Icon(section.selectedIcon),
+              label: section.label,
+            ),
+        ],
+      );
+    }
+
+    final visible = sections.take(_maxVisible - 1).toList();
+    final hidden = sections.skip(_maxVisible - 1).toList();
+    final inHidden = index >= visible.length;
+
+    return NavigationBar(
+      // Когда открыт скрытый раздел, подсвечиваем «Ещё».
+      selectedIndex: inHidden ? visible.length : index,
+      onDestinationSelected: (value) {
+        if (value < visible.length) {
+          onSelected(value);
+          return;
+        }
+        _showMore(context, hidden);
+      },
+      destinations: [
+        for (final section in visible)
+          NavigationDestination(
+            icon: Icon(section.icon),
+            selectedIcon: Icon(section.selectedIcon),
+            label: section.label,
+          ),
+        NavigationDestination(
+          icon: const Icon(Icons.more_horiz),
+          // Подписываем текущим разделом, чтобы человек видел, где он.
+          label: inHidden ? sections[index].label : 'Ещё',
+        ),
+      ],
+    );
+  }
+
+  void _showMore(BuildContext context, List<_Section> hidden) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final section in hidden)
+              ListTile(
+                leading: Icon(section.icon),
+                title: Text(section.label),
+                selected: sections.indexOf(section) == index,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  onSelected(sections.indexOf(section));
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
