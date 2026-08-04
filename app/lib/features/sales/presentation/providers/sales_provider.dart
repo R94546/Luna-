@@ -12,9 +12,3 @@ SalesApi salesApi(Ref ref) => SalesApi(ref.watch(dioProvider));
 
 @riverpod
 Future<SalesPageDto> sales(Ref ref) => ref.watch(salesApiProvider).list();
-
-/// Справочник товаров. keepAlive — он нужен на каждое открытие формы
-/// продажи, и перезапрашивать его каждый раз незачем.
-@Riverpod(keepAlive: true)
-Future<List<ProductDto>> products(Ref ref) =>
-    ref.watch(salesApiProvider).products();

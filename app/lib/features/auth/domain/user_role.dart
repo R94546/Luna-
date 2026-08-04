@@ -33,6 +33,11 @@ enum UserRole {
   /// он ведёт деньги, а не производство.
   bool get canApproveWorkLogs => canSeeDashboard || this == UserRole.admin;
 
+  /// Справочники ведут владелец и мастер. Бухгалтеру расценки закрыты
+  /// на бэкенде (`@Roles(ADMIN)` на всём контроллере), и показывать ему
+  /// раздел, где половина вкладок ответит 403, незачем.
+  bool get canManageCatalog => canApproveWorkLogs;
+
   String get label => switch (this) {
     UserRole.superadmin => 'Суперадмин',
     UserRole.owner => 'Владелец',

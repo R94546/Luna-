@@ -118,19 +118,3 @@ class SalesPageDto with _$SalesPageDto {
   factory SalesPageDto.fromJson(Map<String, dynamic> json) =>
       _$SalesPageDtoFromJson(json);
 }
-
-/// Товар из справочника — для выбора позиций при продаже.
-@freezed
-class ProductDto with _$ProductDto {
-  const factory ProductDto({
-    required String id,
-    @Default('') String sku,
-    required String name,
-    @Default('0') String salePrice,
-    @Default(0) int stockQuantity,
-    @Default(false) bool isLowStock,
-  }) = _ProductDto;
-
-  factory ProductDto.fromJson(Map<String, dynamic> json) =>
-      _$ProductDtoFromJson(json);
-}

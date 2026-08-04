@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/api/idempotency.dart';
+import '../../catalog/data/catalog_dto.dart';
 import 'sale_dto.dart';
 
 /// Позиция продажи в том виде, в каком её собирает экран.
@@ -36,21 +37,6 @@ class SalesApi {
       );
 
       return SalesPageDto.fromJson(response.data!);
-    } on DioException catch (error) {
-      throw ApiException.from(error);
-    }
-  }
-
-  Future<List<ProductDto>> products() async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/products',
-        queryParameters: {'limit': 100},
-      );
-
-      return (response.data!['items'] as List<dynamic>)
-          .map((e) => ProductDto.fromJson(e as Map<String, dynamic>))
-          .toList();
     } on DioException catch (error) {
       throw ApiException.from(error);
     }
