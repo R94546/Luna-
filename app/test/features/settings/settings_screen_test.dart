@@ -23,6 +23,12 @@ class _FakeAdapter implements HttpClientAdapter {
     Stream<List<int>>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    // Настройки показывают значок непрочитанных, поэтому лента
+    // запрашивается при каждом открытии экрана.
+    if (options.path == '/notifications') {
+      return _json({'items': <Object>[], 'unread': 0});
+    }
+
     if (options.path == '/auth/password') {
       passwordCalls.add(options.data as Map<String, dynamic>);
 
