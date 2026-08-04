@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/domain/user_role.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
 import '../../features/cash/presentation/cash_screen.dart';
+import '../../features/catalog/presentation/catalog_screen.dart';
+import '../../features/customers/presentation/customers_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/orders/presentation/orders_screen.dart';
 import '../../features/payroll/presentation/payroll_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/work_logs/presentation/work_logs_screen.dart';
 
 /// Раздел приложения в нижней навигации.
@@ -87,6 +90,27 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           screen: CashScreen(),
         ),
       ],
+      // Справочники и клиенты стоят после ежедневных разделов намеренно:
+      // их заполняют при запуске цеха и потом почти не открывают.
+      if (role?.canManageCatalog ?? false)
+        const _Section(
+          label: 'Справочники',
+          icon: Icons.category_outlined,
+          selectedIcon: Icons.category,
+          screen: CatalogScreen(),
+        ),
+      const _Section(
+        label: 'Клиенты',
+        icon: Icons.storefront_outlined,
+        selectedIcon: Icons.storefront,
+        screen: CustomersScreen(),
+      ),
+      const _Section(
+        label: 'Настройки',
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings,
+        screen: SettingsScreen(),
+      ),
     ];
   }
 

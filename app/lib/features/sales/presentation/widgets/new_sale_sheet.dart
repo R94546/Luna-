@@ -6,6 +6,8 @@ import '../../../../core/api/idempotency.dart';
 import '../../../../core/format/money.dart';
 import '../../../cash/data/cash_dto.dart';
 import '../../../cash/presentation/providers/cash_provider.dart';
+import '../../../catalog/data/catalog_dto.dart';
+import '../../../catalog/presentation/providers/catalog_provider.dart';
 import '../../data/sale_dto.dart';
 import '../../data/sales_api.dart';
 import '../providers/sales_provider.dart';
@@ -33,7 +35,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final products = ref.watch(productsProvider);
+    final products = ref.watch(catalogProductsProvider);
     final accounts = ref.watch(cashAccountsProvider);
 
     return Padding(

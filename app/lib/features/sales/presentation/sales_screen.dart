@@ -8,6 +8,7 @@ import '../../../core/widgets/async_value_builder.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/providers/session_provider.dart';
 import '../../cash/presentation/providers/cash_provider.dart';
+import '../../catalog/presentation/providers/catalog_provider.dart';
 import '../data/sale_dto.dart';
 import 'providers/sales_provider.dart';
 import 'widgets/new_sale_sheet.dart';
@@ -76,7 +77,7 @@ class SalesScreen extends ConsumerWidget {
 
     if (created == true) {
       ref.invalidate(salesProvider);
-      ref.invalidate(productsProvider);
+      ref.invalidate(catalogProductsProvider);
       invalidateMoney(ref);
     }
   }
@@ -96,7 +97,7 @@ class SalesScreen extends ConsumerWidget {
     try {
       await ref.read(salesApiProvider).cancel(sale.id, reason);
       ref.invalidate(salesProvider);
-      ref.invalidate(productsProvider);
+      ref.invalidate(catalogProductsProvider);
       invalidateMoney(ref);
     } on ApiException catch (error) {
       if (!context.mounted) return;

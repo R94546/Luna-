@@ -39,6 +39,25 @@ class AuthApi {
     }
   }
 
+  /// Смена пароля.
+  ///
+  /// Старый пароль спрашивается сервером не для формальности: телефон
+  /// с открытым приложением легко оставить на столе, и без проверки любой
+  /// прохожий сменил бы владельцу пароль.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.patch<void>(
+        '/auth/password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+    } on DioException catch (error) {
+      throw ApiException.from(error);
+    }
+  }
+
   Future<void> logout(String refreshToken) async {
     try {
       await _dio.post<void>(
