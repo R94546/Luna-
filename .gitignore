@@ -46,6 +46,9 @@ next-fix/
 check-fix/
 telegram-fixes/
 
+# Временные скрипты проверок: живут одну сессию и в историю не нужны
+backend/test/_*_tmp.ts
+
 # Дампы дерева каталогов (tree /f > ...) — не должны попадать в репозиторий
 structure.txt
 clean-structure.txt
