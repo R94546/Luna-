@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/domain/user_role.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
+import '../../features/cash/presentation/cash_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/payroll/presentation/payroll_screen.dart';
 import '../../features/work_logs/presentation/work_logs_screen.dart';
 
 /// Раздел приложения в нижней навигации.
@@ -54,6 +56,22 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         selectedIcon: Icons.assignment,
         screen: WorkLogsScreen(),
       ),
+      // Зарплата и касса — зона владельца и бухгалтера. Мастер их не видит:
+      // на бэкенде эти эндпоинты ему закрыты.
+      if (role?.canSeeMoney ?? false) ...[
+        const _Section(
+          label: 'Зарплата',
+          icon: Icons.payments_outlined,
+          selectedIcon: Icons.payments,
+          screen: PayrollScreen(),
+        ),
+        const _Section(
+          label: 'Деньги',
+          icon: Icons.account_balance_wallet_outlined,
+          selectedIcon: Icons.account_balance_wallet,
+          screen: CashScreen(),
+        ),
+      ],
     ];
   }
 
