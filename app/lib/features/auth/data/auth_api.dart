@@ -51,10 +51,7 @@ class AuthApi {
     try {
       await _dio.patch<void>(
         '/auth/password',
-        data: {
-          'currentPassword': currentPassword,
-          'newPassword': newPassword,
-        },
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
     } on DioException catch (error) {
       throw ApiException.from(error);

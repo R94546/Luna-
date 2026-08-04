@@ -209,8 +209,6 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
   /// «12000.00» в поле ввода читается хуже, чем «12000».
   static String _initialMoney(String? value) {
     if (value == null) return '';
-    return value.endsWith('.00')
-        ? value.substring(0, value.length - 3)
-        : value;
+    return value.endsWith('.00') ? value.substring(0, value.length - 3) : value;
   }
 }

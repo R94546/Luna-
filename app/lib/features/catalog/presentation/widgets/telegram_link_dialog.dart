@@ -17,8 +17,7 @@ class TelegramLinkDialog extends ConsumerStatefulWidget {
   final EmployeeDto employee;
 
   @override
-  ConsumerState<TelegramLinkDialog> createState() =>
-      _TelegramLinkDialogState();
+  ConsumerState<TelegramLinkDialog> createState() => _TelegramLinkDialogState();
 }
 
 class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
@@ -62,10 +61,7 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                widget.employee.fullName,
-                style: theme.textTheme.titleSmall,
-              ),
+              Text(widget.employee.fullName, style: theme.textTheme.titleSmall),
               const SizedBox(height: 16),
               SelectableText(
                 link.code,

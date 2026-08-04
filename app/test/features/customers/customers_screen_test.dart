@@ -66,8 +66,12 @@ class _FakeSession extends SessionController {
   final UserRole role;
 
   @override
-  Future<Session?> build() async =>
-      Session(userId: 'u', fullName: 'Test', phone: '+998901234567', role: role);
+  Future<Session?> build() async => Session(
+    userId: 'u',
+    fullName: 'Test',
+    phone: '+998901234567',
+    role: role,
+  );
 }
 
 Future<_FakeAdapter> _pump(

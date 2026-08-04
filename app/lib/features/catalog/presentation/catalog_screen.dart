@@ -114,10 +114,7 @@ class _ProductsTab extends ConsumerWidget {
                       itemBuilder: (_) => const [
                         PopupMenuItem(value: 'edit', child: Text('Изменить')),
                         PopupMenuItem(value: 'stock', child: Text('Склад')),
-                        PopupMenuItem(
-                          value: 'archive',
-                          child: Text('В архив'),
-                        ),
+                        PopupMenuItem(value: 'archive', child: Text('В архив')),
                       ],
                     ),
                     onTap: () => _edit(context, ref, product),
@@ -406,10 +403,7 @@ class _OperationsTab extends ConsumerWidget {
                           : _archive(context, ref, operation),
                       itemBuilder: (_) => const [
                         PopupMenuItem(value: 'edit', child: Text('Изменить')),
-                        PopupMenuItem(
-                          value: 'archive',
-                          child: Text('В архив'),
-                        ),
+                        PopupMenuItem(value: 'archive', child: Text('В архив')),
                       ],
                     ),
                     onTap: () => _edit(context, ref, operation),

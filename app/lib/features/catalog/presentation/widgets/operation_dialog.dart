@@ -20,9 +20,7 @@ class OperationDialog extends ConsumerStatefulWidget {
 }
 
 class _OperationDialogState extends ConsumerState<OperationDialog> {
-  late final _name = TextEditingController(
-    text: widget.operation?.name ?? '',
-  );
+  late final _name = TextEditingController(text: widget.operation?.name ?? '');
   late final _code = TextEditingController(text: widget.operation?.code ?? '');
   late final _sortOrder = TextEditingController(
     text: (widget.operation?.sortOrder ?? 0).toString(),

@@ -70,11 +70,7 @@ class _FakeAdapter implements HttpClientAdapter {
           'position': 'Tikuvchi',
           'telegramLinked': false,
         },
-        {
-          'id': 'e-2',
-          'fullName': 'Dilnoza',
-          'telegramLinked': true,
-        },
+        {'id': 'e-2', 'fullName': 'Dilnoza', 'telegramLinked': true},
       ]);
     }
 
@@ -114,8 +110,12 @@ class _FakeSession extends SessionController {
   final UserRole role;
 
   @override
-  Future<Session?> build() async =>
-      Session(userId: 'u', fullName: 'Test', phone: '+998901234567', role: role);
+  Future<Session?> build() async => Session(
+    userId: 'u',
+    fullName: 'Test',
+    phone: '+998901234567',
+    role: role,
+  );
 }
 
 Future<_FakeAdapter> _pump(
