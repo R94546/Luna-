@@ -16,12 +16,14 @@ import { CashModule } from './modules/cash/cash.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { PieceRatesModule } from './modules/piece-rates/piece-rates.module';
 import { ProductsModule } from './modules/products/products.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { StockModule } from './modules/stock/stock.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { WorkLogsModule } from './modules/work-logs/work-logs.module';
@@ -49,6 +51,8 @@ import { PrismaModule } from './prisma/prisma.module';
     OrdersModule,
     AnalyticsModule,
     TelegramModule,
+    ReportsModule,
+    NotificationsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
