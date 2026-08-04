@@ -25,6 +25,14 @@ enum UserRole {
   bool get canSeeDashboard =>
       this == UserRole.owner || this == UserRole.superadmin;
 
+  /// Зарплата и касса — владелец и бухгалтер. Мастеру эти эндпоинты
+  /// закрыты на бэкенде, и показывать ему разделы значит обещать 403.
+  bool get canSeeMoney => canSeeDashboard || this == UserRole.accountant;
+
+  /// Подтверждать выработку могут владелец и мастер, но не бухгалтер:
+  /// он ведёт деньги, а не производство.
+  bool get canApproveWorkLogs => canSeeDashboard || this == UserRole.admin;
+
   String get label => switch (this) {
     UserRole.superadmin => 'Суперадмин',
     UserRole.owner => 'Владелец',

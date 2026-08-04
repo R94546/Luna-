@@ -5,7 +5,6 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/format/money.dart';
 import '../../../core/widgets/async_value_builder.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/providers/session_provider.dart';
 import '../data/work_log_dto.dart';
 import 'providers/work_logs_provider.dart';
@@ -115,7 +114,7 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
 
     // Подтверждать может владелец и мастер. Бухгалтер выработку видит,
     // но не решает — на бэкенде эти эндпоинты ему закрыты.
-    final canApprove = role == UserRole.owner || role == UserRole.admin;
+    final canApprove = role?.canApproveWorkLogs ?? false;
 
     return Scaffold(
       appBar: AppBar(
