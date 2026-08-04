@@ -7,6 +7,7 @@ import '../../features/cash/presentation/cash_screen.dart';
 import '../../features/catalog/presentation/catalog_screen.dart';
 import '../../features/customers/presentation/customers_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/notifications/presentation/providers/notifications_provider.dart';
 import '../../features/orders/presentation/orders_screen.dart';
 import '../../features/payroll/presentation/payroll_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
@@ -20,12 +21,16 @@ class _Section {
     required this.icon,
     required this.selectedIcon,
     required this.screen,
+    this.badge = 0,
   });
 
   final String label;
   final IconData icon;
   final IconData selectedIcon;
   final Widget screen;
+
+  /// Число на значке вкладки. Ноль — значка нет.
+  final int badge;
 }
 
 /// Оболочка с нижней навигацией.
@@ -105,11 +110,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         selectedIcon: Icons.storefront,
         screen: CustomersScreen(),
       ),
-      const _Section(
+      // Уведомления и отчёты живут внутри настроек, поэтому счётчик
+      // непрочитанных висит на этой вкладке: иначе о них узнают, только
+      // случайно туда заглянув.
+      _Section(
         label: 'Настройки',
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,
-        screen: SettingsScreen(),
+        screen: const SettingsScreen(),
+        badge: ref.watch(unreadCountProvider),
       ),
     ];
   }
@@ -168,8 +177,8 @@ class _BottomBar extends StatelessWidget {
         destinations: [
           for (final section in sections)
             NavigationDestination(
-              icon: Icon(section.icon),
-              selectedIcon: Icon(section.selectedIcon),
+              icon: _badged(section, Icon(section.icon)),
+              selectedIcon: _badged(section, Icon(section.selectedIcon)),
               label: section.label,
             ),
         ],
@@ -179,6 +188,10 @@ class _BottomBar extends StatelessWidget {
     final visible = sections.take(_maxVisible - 1).toList();
     final hidden = sections.skip(_maxVisible - 1).toList();
     final inHidden = index >= visible.length;
+
+    // Счётчик из скрытых разделов переезжает на «Ещё»: иначе о нём
+    // не узнать, не открыв список.
+    final hiddenBadge = hidden.fold<int>(0, (sum, s) => sum + s.badge);
 
     return NavigationBar(
       // Когда открыт скрытый раздел, подсвечиваем «Ещё».
@@ -193,17 +206,27 @@ class _BottomBar extends StatelessWidget {
       destinations: [
         for (final section in visible)
           NavigationDestination(
-            icon: Icon(section.icon),
-            selectedIcon: Icon(section.selectedIcon),
+            icon: _badged(section, Icon(section.icon)),
+            selectedIcon: _badged(section, Icon(section.selectedIcon)),
             label: section.label,
           ),
         NavigationDestination(
-          icon: const Icon(Icons.more_horiz),
+          icon: hiddenBadge > 0
+              ? Badge(
+                  label: Text('$hiddenBadge'),
+                  child: const Icon(Icons.more_horiz),
+                )
+              : const Icon(Icons.more_horiz),
           // Подписываем текущим разделом, чтобы человек видел, где он.
           label: inHidden ? sections[index].label : 'Ещё',
         ),
       ],
     );
+  }
+
+  static Widget _badged(_Section section, Widget icon) {
+    if (section.badge == 0) return icon;
+    return Badge(label: Text('${section.badge}'), child: icon);
   }
 
   void _showMore(BuildContext context, List<_Section> hidden) {
@@ -217,6 +240,9 @@ class _BottomBar extends StatelessWidget {
               ListTile(
                 leading: Icon(section.icon),
                 title: Text(section.label),
+                trailing: section.badge > 0
+                    ? Badge(label: Text('${section.badge}'))
+                    : null,
                 selected: sections.indexOf(section) == index,
                 onTap: () {
                   Navigator.of(sheetContext).pop();

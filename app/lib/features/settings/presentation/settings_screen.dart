@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_config.dart';
 import '../../auth/presentation/providers/session_provider.dart';
+import '../../notifications/presentation/notifications_screen.dart';
+import '../../notifications/presentation/providers/notifications_provider.dart';
+import '../../reports/presentation/reports_screen.dart';
 import 'widgets/change_password_dialog.dart';
 
 /// Настройки: кто вошёл, смена пароля, выход.
@@ -16,6 +19,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionControllerProvider).value;
+    final unread = ref.watch(unreadCountProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -69,6 +73,34 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: const Text('Уведомления'),
+                  subtitle: const Text('Остатки и просроченные заказы'),
+                  trailing: unread > 0
+                      ? Badge(label: Text('$unread'))
+                      : const Icon(Icons.chevron_right),
+                  onTap: () => _open(context, const NotificationsScreen()),
+                ),
+                // Отчёты — там же, где деньги: бэкенд отдаёт их владельцу
+                // и бухгалтеру, мастеру эта кнопка ответила бы 403.
+                if (session?.role.canSeeMoney ?? false) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: const Text('Отчёты'),
+                    subtitle: const Text('Выгрузка в Excel и PDF'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _open(context, const ReportsScreen()),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
                   leading: const Icon(Icons.lock_outline),
                   title: const Text('Сменить пароль'),
                   onTap: () => _changePassword(context),
@@ -96,6 +128,10 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _open(BuildContext context, Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   Future<void> _changePassword(BuildContext context) async {
