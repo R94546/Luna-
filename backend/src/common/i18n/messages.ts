@@ -51,6 +51,7 @@ const uz: Dict = {
   'validation.required': 'Majburiy maydon',
   'validation.positive': "Qiymat noldan katta bo'lishi kerak",
   'validation.date_format': 'Sana YYYY-MM-DD koʻrinishida boʻlishi kerak',
+  'validation.date_range': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
   'validation.period_order': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
   'validation.nothing_to_update': "O'zgartirish uchun hech narsa yuborilmadi",
   'validation.category_not_manual':
@@ -123,6 +124,7 @@ const ru: Dict = {
   'validation.required': 'Обязательное поле',
   'validation.positive': 'Значение должно быть больше нуля',
   'validation.date_format': 'Дата должна быть в формате ГГГГ-ММ-ДД',
+  'validation.date_range': 'Конец периода не может быть раньше начала',
   'validation.period_order': 'Конец периода не может быть раньше начала',
   'validation.nothing_to_update': 'Не передано ни одного поля для изменения',
   'validation.category_not_manual':
