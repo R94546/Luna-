@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/dashboard_dto.dart';
 
 /// То, что требует внимания прямо сейчас.
@@ -14,25 +15,27 @@ class AlertsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final items = <Widget>[
       if (alerts.pendingWorkLogs > 0)
         _Alert(
           icon: Icons.pending_actions_outlined,
-          label: 'Выработка ждёт подтверждения',
+          label: l.dashAlertWorkLogs,
           count: alerts.pendingWorkLogs,
           color: AppTheme.warning,
         ),
       if (alerts.lowStockProducts > 0)
         _Alert(
           icon: Icons.inventory_2_outlined,
-          label: 'Модели заканчиваются',
+          label: l.dashAlertLowStock,
           count: alerts.lowStockProducts,
           color: AppTheme.warning,
         ),
       if (alerts.overdueOrders > 0)
         _Alert(
           icon: Icons.schedule_outlined,
-          label: 'Заказы просрочены',
+          label: l.dashAlertOrdersOverdue,
           count: alerts.overdueOrders,
           color: AppTheme.negative,
         ),

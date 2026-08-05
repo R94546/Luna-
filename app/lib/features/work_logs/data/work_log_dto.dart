@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'work_log_dto.freezed.dart';
@@ -12,10 +13,10 @@ enum WorkLogStatus {
   @JsonValue('REJECTED')
   rejected;
 
-  String get label => switch (this) {
-    WorkLogStatus.pending => 'Ждёт',
-    WorkLogStatus.approved => 'Принято',
-    WorkLogStatus.rejected => 'Отклонено',
+  String label(L l10n) => switch (this) {
+    WorkLogStatus.pending => l10n.workLogsPending,
+    WorkLogStatus.approved => l10n.workLogsApproved,
+    WorkLogStatus.rejected => l10n.workLogsRejected,
   };
 
   /// Значение для параметра запроса.

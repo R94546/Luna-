@@ -11,6 +11,7 @@ import '../data/costing_dto.dart';
 import 'providers/costing_provider.dart';
 import 'widgets/cost_item_dialog.dart';
 import 'widgets/material_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Себестоимость: во что обходится пара и какую цену просить.
 ///
@@ -22,15 +23,17 @@ class CostingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Себестоимость'),
-          bottom: const TabBar(
+          title: Text(l.costingTitle),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Расчёт'),
-              Tab(text: 'Материалы'),
+              Tab(text: l.costingTabCalc),
+              Tab(text: l.costingTabMaterials),
             ],
           ),
         ),
@@ -136,6 +139,8 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
   }
 
   Future<void> _save() async {
+    final l = L.of(context);
+
     final name = await showDialog<String>(
       context: context,
       builder: (_) => const _NameDialog(),
@@ -166,20 +171,21 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
           : await showDialog<bool>(
               context: context,
               builder: (dialogContext) => AlertDialog(
-                title: const Text('Записать в модель?'),
+                title: Text(l.costingApplyQuestion),
                 content: Text(
-                  'Себестоимость «${_product!.name}» станет '
-                  '${Money.format(_result?.totalCost)}. '
-                  'Прошлые продажи не изменятся.',
+                  l.costingApplyHint(
+                    _product!.name,
+                    Money.format(_result?.totalCost),
+                  ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Позже'),
+                    child: Text(l.costingLater),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: const Text('Записать'),
+                    child: Text(l.costingApply),
                   ),
                 ],
               ),
@@ -194,7 +200,7 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Расчёт сохранён')));
+      ).showSnackBar(SnackBar(content: Text(l.costingSaved)));
     } on ApiException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -205,6 +211,8 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final products = ref.watch(catalogProductsProvider).value ?? const [];
     final theme = Theme.of(context);
     final result = _result;
@@ -215,12 +223,12 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
         DropdownButtonFormField<ProductDto?>(
           initialValue: _product,
           isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Модель',
-            helperText: 'Работа возьмётся из её расценок',
+          decoration: InputDecoration(
+            labelText: l.rateProduct,
+            helperText: l.costingProductHint,
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('Без модели')),
+            DropdownMenuItem(value: null, child: Text(l.costingNoProduct)),
             for (final product in products)
               DropdownMenuItem(
                 value: product,
@@ -235,19 +243,18 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
         const SizedBox(height: 20),
         Row(
           children: [
-            Text('Материалы', style: theme.textTheme.titleSmall),
+            Text(l.costingMaterials, style: theme.textTheme.titleSmall),
             const Spacer(),
             TextButton.icon(
               onPressed: _addItem,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Добавить'),
+              label: Text(l.costingAdd),
             ),
           ],
         ),
         if (_items.isEmpty)
           Text(
-            'Пока пусто. Добавьте кожу, подошву, фурнитуру — всё, что уходит '
-            'на одну пару',
+            l.costingEmptyItems,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -275,16 +282,16 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
         TextField(
           controller: _overhead,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Накладные на пару',
-            helperText: 'Аренда и коммуналка, делённые на плановый выпуск',
+          decoration: InputDecoration(
+            labelText: l.costingOverhead,
+            helperText: l.costingOverheadHint,
           ),
           onSubmitted: (_) => _calculate(),
         ),
         const SizedBox(height: 20),
         Row(
           children: [
-            Text('Наценка', style: theme.textTheme.titleSmall),
+            Text(l.costingMargin, style: theme.textTheme.titleSmall),
             const Spacer(),
             Text(
               '${_margin.round()}%',
@@ -321,7 +328,7 @@ class _CalculatorTabState extends ConsumerState<_CalculatorTab> {
           FilledButton.icon(
             onPressed: _save,
             icon: const Icon(Icons.save_outlined),
-            label: const Text('Сохранить расчёт'),
+            label: Text(l.costingSave),
           ),
         ],
       ],
@@ -344,7 +351,7 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     // Пока сервер не ответил, названия материала из справочника у нас нет —
     // показываем то, что известно, а не пустую строку.
-    final name = breakdown?.name ?? item.name ?? 'Материал';
+    final name = breakdown?.name ?? item.name ?? L.of(context).materialTitle;
     final unit = breakdown?.unit ?? item.unit ?? '';
 
     return ListTile(
@@ -365,7 +372,7 @@ class _ItemRow extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close, size: 18),
             onPressed: onRemove,
-            tooltip: 'Убрать',
+            tooltip: L.of(context).actionRemove,
           ),
         ],
       ),
@@ -386,6 +393,8 @@ class _Result extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final theme = Theme.of(context);
 
     return Card(
@@ -395,27 +404,27 @@ class _Result extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Line(label: 'Материалы', value: result.materialsCost),
+            _Line(label: l.costingMaterials, value: result.materialsCost),
             _Line(
-              label: 'Работа',
+              label: l.costingWork,
               value: result.laborCost,
               // Разбивка объясняет, откуда взялась цифра: она сложена
               // из расценок, а не введена руками.
               hint: result.laborBreakdown.isEmpty
-                  ? 'Расценок по модели нет'
+                  ? l.costingNoRates
                   : result.laborBreakdown.map((e) => e.operation).join(' · '),
             ),
-            _Line(label: 'Накладные', value: result.overheadCost),
+            _Line(label: l.costingOverhead, value: result.overheadCost),
             const Divider(height: 20),
-            _Line(label: 'Себестоимость', value: result.totalCost, bold: true),
+            _Line(label: l.costingTotal, value: result.totalCost, bold: true),
             const SizedBox(height: 8),
             _Line(
-              label: 'Цена при наценке',
+              label: l.costingPriceWithMargin,
               value: price,
               bold: true,
               color: theme.colorScheme.primary,
             ),
-            _Line(label: 'Прибыль с пары', value: profit),
+            _Line(label: l.costingProfitPerPair, value: profit),
           ],
         ),
       ),
@@ -489,22 +498,20 @@ class _NameDialogState extends State<_NameDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Название расчёта'),
+      title: Text(L.of(context).costingNameTitle),
       content: TextField(
         controller: _name,
         autofocus: true,
-        decoration: const InputDecoration(
-          hintText: 'Зимние ботинки, вариант 2',
-        ),
+        decoration: InputDecoration(hintText: L.of(context).costingNameHint),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(L.of(context).actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_name.text.trim()),
-          child: const Text('Сохранить'),
+          child: Text(L.of(context).actionSave),
         ),
       ],
     );
@@ -518,6 +525,8 @@ class _MaterialsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final materials = ref.watch(materialsProvider);
 
     return Scaffold(
@@ -530,12 +539,10 @@ class _MaterialsTab extends ConsumerWidget {
         onRetry: () => ref.invalidate(materialsProvider),
         builder: (items) {
           if (items.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.inventory_2_outlined,
-              title: 'Материалов нет',
-              message:
-                  'Заведите кожу, подошву, фурнитуру — калькулятор возьмёт '
-                  'из справочника цены',
+              title: l.costingMaterialsEmptyTitle,
+              message: l.costingMaterialsEmptyHint,
             );
           }
 
@@ -548,7 +555,7 @@ class _MaterialsTab extends ConsumerWidget {
 
               return ListTile(
                 title: Text(material.name),
-                subtitle: Text('за 1 ${material.unit}'),
+                subtitle: Text(l.materialPerUnit(material.unit)),
                 trailing: Text(
                   Money.format(material.unitPrice),
                   style: const TextStyle(fontWeight: FontWeight.w600),
@@ -584,19 +591,18 @@ class _MaterialsTab extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Убрать «${material.name}»?'),
-        content: const Text(
-          'Из справочника пропадёт, но в сохранённых расчётах останется: '
-          'там цена записана снимком.',
+        title: Text(
+          L.of(dialogContext).costingMaterialRemoveTitle(material.name),
         ),
+        content: Text(L.of(dialogContext).costingMaterialRemoveHint),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(L.of(context).actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Убрать'),
+            child: Text(L.of(dialogContext).actionRemove),
           ),
         ],
       ),

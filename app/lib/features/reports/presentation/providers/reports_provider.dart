@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/api/api_exception.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../data/report_dto.dart';
 import '../../data/reports_api.dart';
@@ -40,6 +41,7 @@ class ReportExport extends _$ReportExport {
   ReportState build() => const ReportState();
 
   Future<void> run({
+    required L l10n,
     required ReportType type,
     required ReportFormat format,
     required DateTime from,
@@ -58,11 +60,11 @@ class ReportExport extends _$ReportExport {
         to: to,
       );
 
-      final ready = await _waitReady(api, job);
+      final ready = await _waitReady(api, job, l10n);
       if (ready == null) {
-        state = const ReportState(
+        state = ReportState(
           stage: ReportStage.failed,
-          error: 'Отчёт собирается слишком долго. Попробуйте меньший период',
+          error: l10n.reportsTooLong,
         );
         return;
       }
@@ -87,9 +89,9 @@ class ReportExport extends _$ReportExport {
       // Сюда попадает всё платформенное: нет доступа к папке, нет места
       // на диске, в браузере вовсе нет файловой системы. Показать
       // техническую ошибку человеку нечестно — он с ней ничего не сделает.
-      state = const ReportState(
+      state = ReportState(
         stage: ReportStage.failed,
-        error: 'Не удалось сохранить файл на устройстве',
+        error: l10n.reportsSaveFailed,
       );
     }
   }
@@ -104,16 +106,20 @@ class ReportExport extends _$ReportExport {
 
   /// Опрос статуса. Полминуты хватает даже отчёту за год; дальше молчание
   /// сервера — это уже поломка, а не долгая работа.
-  Future<ReportJobDto?> _waitReady(ReportsApi api, ReportJobDto job) async {
+  Future<ReportJobDto?> _waitReady(
+    ReportsApi api,
+    ReportJobDto job,
+    L l10n,
+  ) async {
     var current = job;
 
     for (var attempt = 0; attempt < 60; attempt++) {
       if (current.isReady) return current;
       if (current.isFailed) {
-        throw const ApiException(
+        throw ApiException(
           statusCode: 500,
           code: 'REPORT_FAILED',
-          message: 'Не удалось собрать отчёт. Попробуйте ещё раз',
+          message: l10n.reportsBuildFailed,
         );
       }
 

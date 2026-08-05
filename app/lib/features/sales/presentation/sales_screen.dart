@@ -12,33 +12,34 @@ import '../../catalog/presentation/providers/catalog_provider.dart';
 import '../data/sale_dto.dart';
 import 'providers/sales_provider.dart';
 import 'widgets/new_sale_sheet.dart';
+import '../../../l10n/app_localizations.dart';
 
 class SalesScreen extends ConsumerWidget {
   const SalesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final sales = ref.watch(salesProvider);
     final role = ref.watch(sessionControllerProvider).value?.role;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Продажи')),
+      appBar: AppBar(title: Text(l.salesTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _newSale(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Продать'),
+        label: Text(l.salesSell),
       ),
       body: AsyncValueBuilder(
         value: sales,
         onRetry: () => ref.invalidate(salesProvider),
         builder: (page) {
           if (page.items.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.point_of_sale_outlined,
-              title: 'Продаж нет',
-              message:
-                  'Оформите первую — товар спишется со склада, '
-                  'а деньги придут в кассу',
+              title: l.salesEmptyTitle,
+              message: l.salesEmptyHint,
             );
           }
 
@@ -121,11 +122,14 @@ class _Summary extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: _Figure(label: 'Выручка', value: summary.revenue),
+              child: _Figure(
+                label: L.of(context).salesRevenue,
+                value: summary.revenue,
+              ),
             ),
             Expanded(
               child: _Figure(
-                label: 'Прибыль',
+                label: L.of(context).salesProfit,
                 value: summary.grossProfit,
                 color: AppTheme.positive,
               ),
@@ -133,7 +137,7 @@ class _Summary extends StatelessWidget {
             if (Money.parse(summary.debt).sign > 0)
               Expanded(
                 child: _Figure(
-                  label: 'Долг',
+                  label: L.of(context).salesDebt,
                   value: summary.debt,
                   color: AppTheme.negative,
                 ),
@@ -202,7 +206,7 @@ class _SaleCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  '№${sale.saleNumber}',
+                  L.of(context).salesNumber(sale.saleNumber),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     // Сторнированная продажа зачёркнута: она осталась
@@ -214,10 +218,13 @@ class _SaleCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 if (sale.isCancelled)
-                  const _Chip(text: 'Сторно', color: AppTheme.negative)
+                  _Chip(
+                    text: L.of(context).salesCancelled,
+                    color: AppTheme.negative,
+                  )
                 else
                   _Chip(
-                    text: sale.paymentMethod.label,
+                    text: sale.paymentMethod.label(L.of(context)),
                     color: theme.colorScheme.outline,
                   ),
                 const Spacer(),
@@ -242,7 +249,9 @@ class _SaleCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Прибыль ${Money.compact(sale.grossProfit)}',
+                  L
+                      .of(context)
+                      .salesProfitAmount(Money.compact(sale.grossProfit)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppTheme.positive,
                     fontWeight: FontWeight.w600,
@@ -251,7 +260,7 @@ class _SaleCard extends StatelessWidget {
                 if (Money.parse(sale.debt).sign > 0) ...[
                   const SizedBox(width: 12),
                   Text(
-                    'Долг ${Money.compact(sale.debt)}',
+                    L.of(context).salesDebtAmount(Money.compact(sale.debt)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.negative,
                     ),
@@ -259,7 +268,10 @@ class _SaleCard extends StatelessWidget {
                 ],
                 const Spacer(),
                 if (onCancel != null && !sale.isCancelled)
-                  TextButton(onPressed: onCancel, child: const Text('Сторно')),
+                  TextButton(
+                    onPressed: onCancel,
+                    child: Text(L.of(context).salesCancelled),
+                  ),
               ],
             ),
           ],
@@ -315,32 +327,31 @@ class _CancelDialogState extends State<_CancelDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: Text('Сторнировать продажу №${widget.saleNumber}?'),
+      title: Text(l.salesCancelTitle(widget.saleNumber)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Товар вернётся на склад, деньги — обратной проводкой в кассу. '
-            'Продажа останется в истории с отметкой.',
-          ),
+          Text(l.salesCancelHint),
           const SizedBox(height: 16),
           TextField(
             controller: _reason,
             maxLength: 255,
-            decoration: const InputDecoration(labelText: 'Причина'),
+            decoration: InputDecoration(labelText: l.salesReason),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_reason.text.trim()),
           style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-          child: const Text('Сторнировать'),
+          child: Text(l.salesCancelAction),
         ),
       ],
     );

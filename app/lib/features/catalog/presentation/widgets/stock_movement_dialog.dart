@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/catalog_dto.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Движение склада руками: закупка, возврат, брак, инвентаризация.
 ///
@@ -39,14 +40,14 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
     final quantity = int.tryParse(_quantity.text.trim());
 
     if (quantity == null || quantity < 0) {
-      setState(() => _error = 'Укажите количество');
+      setState(() => _error = L.of(context).costingQuantityRequired);
       return;
     }
 
     // Ноль осмыслен только при инвентаризации: «пересчитали, ничего нет».
     // Для прихода и списания это пустая запись в журнале.
     if (quantity == 0 && !_type.isAbsolute) {
-      setState(() => _error = 'Количество должно быть больше нуля');
+      setState(() => _error = L.of(context).stockQuantityPositive);
       return;
     }
 
@@ -77,24 +78,26 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: const Text('Движение склада'),
+      title: Text(l.stockMovement),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '${widget.product.name} · остаток ${widget.product.stockQuantity}',
+              l.stockCurrent(widget.product.name, widget.product.stockQuantity),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<MovementType>(
               initialValue: _type,
-              decoration: const InputDecoration(labelText: 'Тип'),
+              decoration: InputDecoration(labelText: l.stockType),
               items: [
                 for (final type in MovementType.values)
-                  DropdownMenuItem(value: type, child: Text(type.label)),
+                  DropdownMenuItem(value: type, child: Text(type.label(l))),
               ],
               onChanged: _busy
                   ? null
@@ -107,12 +110,8 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
               autofocus: true,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: _type.isAbsolute
-                    ? 'Фактический остаток'
-                    : 'Количество',
-                helperText: _type.isAbsolute
-                    ? 'Сколько пар лежит на складе по пересчёту'
-                    : null,
+                labelText: _type.isAbsolute ? l.stockActual : l.quantity,
+                helperText: _type.isAbsolute ? l.stockActualHint : null,
               ),
             ),
             const SizedBox(height: 12),
@@ -120,7 +119,7 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
               controller: _note,
               enabled: !_busy,
               maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Комментарий'),
+              decoration: InputDecoration(labelText: l.fieldComment),
             ),
             if (_error != null)
               Text(
@@ -133,7 +132,7 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -144,7 +143,7 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Записать'),
+              : Text(l.cashRecord),
         ),
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/costing_dto.dart';
 import '../providers/costing_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Строка расхода: материал из справочника или разовый.
 ///
@@ -42,7 +43,7 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
     );
 
     if (quantity == null || quantity <= 0) {
-      setState(() => _error = 'Укажите количество');
+      setState(() => _error = L.of(context).costingQuantityRequired);
       return;
     }
 
@@ -52,7 +53,7 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
       final price = _price.text.trim();
 
       if (name.isEmpty || unit.isEmpty || double.tryParse(price) == null) {
-        setState(() => _error = 'Заполните название, единицу и цену');
+        setState(() => _error = L.of(context).costingOneOffRequired);
         return;
       }
 
@@ -68,7 +69,7 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
     }
 
     if (_material == null) {
-      setState(() => _error = 'Выберите материал');
+      setState(() => _error = L.of(context).costingSelectMaterial);
       return;
     }
 
@@ -81,20 +82,22 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final materials =
         ref.watch(materialsProvider).value ?? const <MaterialDto>[];
 
     return AlertDialog(
-      title: const Text('Материал в расчёт'),
+      title: Text(l.costingItemTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Из справочника')),
-                ButtonSegment(value: true, label: Text('Разовый')),
+              segments: [
+                ButtonSegment(value: false, label: Text(l.costingFromCatalog)),
+                ButtonSegment(value: true, label: Text(l.costingOneOff)),
               ],
               selected: {_oneOff},
               onSelectionChanged: (value) =>
@@ -104,14 +107,14 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
             if (_oneOff) ...[
               TextField(
                 controller: _name,
-                decoration: const InputDecoration(labelText: 'Название'),
+                decoration: InputDecoration(labelText: l.materialName),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _unit,
-                decoration: const InputDecoration(
-                  labelText: 'Единица',
-                  hintText: 'пара, кг, м',
+                decoration: InputDecoration(
+                  labelText: l.materialUnit,
+                  hintText: l.materialUnitShortHint,
                 ),
               ),
               const SizedBox(height: 12),
@@ -120,18 +123,15 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Цена за единицу'),
+                decoration: InputDecoration(labelText: l.materialPrice),
               ),
             ] else if (materials.isEmpty)
-              const Text(
-                'Справочник материалов пуст — заполните вкладку «Материалы» '
-                'или добавьте разовый материал',
-              )
+              Text(l.costingMaterialsEmptyInDialog)
             else
               DropdownButtonFormField<MaterialDto>(
                 initialValue: _material,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Материал'),
+                decoration: InputDecoration(labelText: l.materialTitle),
                 items: [
                   for (final material in materials)
                     DropdownMenuItem(
@@ -151,7 +151,7 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
                 decimal: true,
               ),
               decoration: InputDecoration(
-                labelText: 'Количество',
+                labelText: l.quantity,
                 suffixText: _oneOff ? _unit.text.trim() : _material?.unit,
               ),
             ),
@@ -168,9 +168,9 @@ class _CostItemDialogState extends ConsumerState<CostItemDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Добавить')),
+        FilledButton(onPressed: _submit, child: Text(l.actionAdd)),
       ],
     );
   }

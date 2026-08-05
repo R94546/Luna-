@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'catalog_dto.freezed.dart';
 part 'catalog_dto.g.dart';
 
@@ -38,15 +40,21 @@ class ProductsPageDto with _$ProductsPageDto {
 /// заказа и подтверждённая выработка. Дай их руками — и остаток разойдётся
 /// с документами, которые его двигали.
 enum MovementType {
-  purchaseIn('PURCHASE_IN', 'Закупка'),
-  returnIn('RETURN_IN', 'Возврат от клиента'),
-  writeOff('WRITE_OFF', 'Брак / списание'),
-  adjustment('ADJUSTMENT', 'Инвентаризация');
+  purchaseIn('PURCHASE_IN'),
+  returnIn('RETURN_IN'),
+  writeOff('WRITE_OFF'),
+  adjustment('ADJUSTMENT');
 
-  const MovementType(this.value, this.label);
+  const MovementType(this.value);
 
   final String value;
-  final String label;
+
+  String label(L l10n) => switch (this) {
+    MovementType.purchaseIn => l10n.stockTypePurchase,
+    MovementType.returnIn => l10n.stockTypeReturn,
+    MovementType.writeOff => l10n.stockTypeWriteOff,
+    MovementType.adjustment => l10n.stockTypeAdjustment,
+  };
 
   /// Для инвентаризации вводят фактический остаток, а не изменение.
   bool get isAbsolute => this == MovementType.adjustment;

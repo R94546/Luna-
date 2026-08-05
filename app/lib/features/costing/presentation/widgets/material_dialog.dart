@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/costing_dto.dart';
 import '../providers/costing_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Материал: кожа, подошва, нитки, клей.
 ///
@@ -43,15 +44,15 @@ class _MaterialDialogState extends ConsumerState<MaterialDialog> {
     final price = _price.text.trim();
 
     if (name.length < 2) {
-      setState(() => _error = 'Укажите название материала');
+      setState(() => _error = L.of(context).materialNameRequired);
       return;
     }
     if (unit.isEmpty) {
-      setState(() => _error = 'Укажите единицу измерения');
+      setState(() => _error = L.of(context).materialUnitRequired);
       return;
     }
     if (double.tryParse(price) == null) {
-      setState(() => _error = 'Укажите цену за единицу');
+      setState(() => _error = L.of(context).materialPriceRequired);
       return;
     }
 
@@ -87,8 +88,10 @@ class _MaterialDialogState extends ConsumerState<MaterialDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: Text(widget.material == null ? 'Новый материал' : 'Материал'),
+      title: Text(widget.material == null ? l.materialNew : l.materialTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -96,14 +99,14 @@ class _MaterialDialogState extends ConsumerState<MaterialDialog> {
             TextField(
               controller: _name,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Название'),
+              decoration: InputDecoration(labelText: l.materialName),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _unit,
-              decoration: const InputDecoration(
-                labelText: 'Единица',
-                hintText: 'дм², пара, кг, м',
+              decoration: InputDecoration(
+                labelText: l.materialUnit,
+                hintText: l.materialUnitHint,
               ),
             ),
             const SizedBox(height: 12),
@@ -112,7 +115,7 @@ class _MaterialDialogState extends ConsumerState<MaterialDialog> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(labelText: 'Цена за единицу'),
+              decoration: InputDecoration(labelText: l.materialPrice),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -127,11 +130,11 @@ class _MaterialDialogState extends ConsumerState<MaterialDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
-          child: const Text('Сохранить'),
+          child: Text(l.actionSave),
         ),
       ],
     );

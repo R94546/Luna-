@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/order_dto.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Отметка о произведённом по позициям заказа.
 ///
@@ -32,8 +33,10 @@ class _ProgressDialogState extends State<ProgressDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: const Text('Произведено'),
+      title: Text(l.ordersProduced),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -48,7 +51,7 @@ class _ProgressDialogState extends State<ProgressDialog> {
                     labelText: item.product.name,
                     // Заказано показываем подсказкой: без неё непонятно,
                     // сколько ещё осталось сделать.
-                    helperText: 'Заказано: ${item.quantity} пар',
+                    helperText: l.ordersOrdered(item.quantity),
                   ),
                 ),
               ),
@@ -58,7 +61,7 @@ class _ProgressDialogState extends State<ProgressDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop({
@@ -66,7 +69,7 @@ class _ProgressDialogState extends State<ProgressDialog> {
               entry.key: int.tryParse(entry.value.text.trim()) ?? 0,
           }),
           style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-          child: const Text('Сохранить'),
+          child: Text(l.actionSave),
         ),
       ],
     );

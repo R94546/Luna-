@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/format/money.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/dashboard_dto.dart';
 
 /// График выручки и прибыли по дням.
@@ -21,7 +22,7 @@ class RevenueChart extends StatelessWidget {
           height: 180,
           child: Center(
             child: Text(
-              'За период продаж не было',
+              L.of(context).dashNoSales,
               style: TextStyle(color: theme.colorScheme.outline),
             ),
           ),
@@ -52,9 +53,15 @@ class RevenueChart extends StatelessWidget {
               padding: const EdgeInsets.only(left: 12),
               child: Row(
                 children: [
-                  _Legend(color: theme.colorScheme.primary, label: 'Выручка'),
+                  _Legend(
+                    color: theme.colorScheme.primary,
+                    label: L.of(context).dashRevenue,
+                  ),
                   const SizedBox(width: 16),
-                  const _Legend(color: AppTheme.positive, label: 'Прибыль'),
+                  _Legend(
+                    color: AppTheme.positive,
+                    label: L.of(context).dashGrossProfit,
+                  ),
                 ],
               ),
             ),

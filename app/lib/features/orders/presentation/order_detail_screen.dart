@@ -10,6 +10,7 @@ import 'orders_screen.dart';
 import 'providers/orders_provider.dart';
 import 'widgets/issue_dialog.dart';
 import 'widgets/progress_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
   const OrderDetailScreen({required this.orderId, super.key});
@@ -18,14 +19,16 @@ class OrderDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final order = ref.watch(orderControllerProvider(orderId));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           order.valueOrNull == null
-              ? 'Заказ'
-              : 'Заказ №${order.valueOrNull!.orderNumber}',
+              ? l.ordersOrder
+              : l.ordersOrderNumber(order.valueOrNull!.orderNumber),
         ),
       ),
       body: AsyncValueBuilder(
@@ -40,7 +43,10 @@ class OrderDetailScreen extends ConsumerWidget {
             children: [
               _Header(order: data),
               const SizedBox(height: 16),
-              Text('Состав', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l.ordersItems,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               for (final item in data.items) _ItemTile(item: item),
               const SizedBox(height: 20),
@@ -142,6 +148,8 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final theme = Theme.of(context);
 
     return Card(
@@ -156,7 +164,7 @@ class _Header extends StatelessWidget {
                 const Spacer(),
                 if (order.dueDate != null)
                   Text(
-                    'Срок: ${order.dueDate}',
+                    L.of(context).ordersDue(order.dueDate ?? ''),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: order.isOverdue
                           ? theme.colorScheme.error
@@ -167,7 +175,7 @@ class _Header extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              order.customer?.name ?? 'Без клиента',
+              order.customer?.name ?? L.of(context).ordersNoCustomer,
               style: theme.textTheme.titleMedium,
             ),
             if (order.customer?.phone != null)
@@ -178,14 +186,14 @@ class _Header extends StatelessWidget {
                 ),
               ),
             const Divider(height: 24),
-            _Line(label: 'Сумма заказа', value: order.totalAmount),
-            _Line(label: 'Предоплата', value: order.prepaidAmount),
-            _Line(label: 'Долг', value: order.debt, bold: true),
+            _Line(label: l.ordersAmount, value: order.totalAmount),
+            _Line(label: l.ordersPrepaid, value: order.prepaidAmount),
+            _Line(label: l.ordersDebt, value: order.debt, bold: true),
             const SizedBox(height: 12),
             Row(
               children: [
                 Text(
-                  'Готовность',
+                  l.ordersProgress,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.outline,
                   ),
@@ -255,8 +263,8 @@ class _ItemTile extends StatelessWidget {
       child: ListTile(
         title: Text(item.product.name),
         subtitle: Text(
-          '${item.producedQuantity} из ${item.quantity} пар · '
-          '${Money.format(item.unitPrice)}',
+          L.of(context).ordersProducedOf(item.producedQuantity, item.quantity) +
+              Money.format(item.unitPrice),
         ),
         trailing: Text(
           Money.compact(item.total),
@@ -285,6 +293,8 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final open =
         order.status != OrderStatus.issued &&
         order.status != OrderStatus.cancelled;
@@ -296,7 +306,7 @@ class _Actions extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onProgress,
             icon: const Icon(Icons.checklist_rounded),
-            label: const Text('Отметить произведённое'),
+            label: Text(l.ordersMarkProduced),
           ),
         for (final status in order.availableTransitions) ...[
           const SizedBox(height: 8),
@@ -306,13 +316,13 @@ class _Actions extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.error,
               ),
-              child: const Text('Отменить заказ'),
+              child: Text(l.ordersCancel),
             )
           else
             FilledButton(
               onPressed: () => onTransition(status),
               child: Text(
-                status == OrderStatus.issued ? 'Выдать' : status.label,
+                status == OrderStatus.issued ? l.ordersIssue : status.label(l),
               ),
             ),
         ],

@@ -6,6 +6,7 @@ import '../../../core/format/money.dart';
 import '../../../core/widgets/async_value_builder.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/providers/session_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/work_log_dto.dart';
 import 'providers/work_logs_provider.dart';
 import 'widgets/work_log_tile.dart';
@@ -83,6 +84,7 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
   }
 
   Future<void> _bulkApprove() async {
+    final l = L.of(context);
     final ids = _selected.toList();
 
     await _runGuarded(() async {
@@ -97,9 +99,8 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
         SnackBar(
           content: Text(
             result.skipped == 0
-                ? 'Принято записей: ${result.approved}'
-                : 'Принято ${result.approved}, пропущено ${result.skipped} — '
-                      'их уже обработали',
+                ? l.workLogsApprovedCount(result.approved)
+                : l.workLogsApprovedSkipped(result.approved, result.skipped),
           ),
         ),
       );
@@ -108,6 +109,7 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final data = ref.watch(workLogsControllerProvider);
     final filter = ref.watch(workLogFilterControllerProvider);
     final role = ref.watch(sessionControllerProvider).value?.role;
@@ -119,8 +121,8 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _selecting
-            ? Text('Выбрано: ${_selected.length}')
-            : const Text('Выработка'),
+            ? Text(l.workLogsSelected(_selected.length))
+            : Text(l.workLogsTitle),
         leading: _selecting
             ? IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -131,13 +133,13 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
           if (_selecting)
             TextButton(
               onPressed: _bulkApprove,
-              child: const Text('Принять всё'),
+              child: Text(l.workLogsApproveAll),
             )
           // Для мастера и бухгалтера это единственный экран: без выхода
           // отсюда они заперты в приложении под чужой учёткой.
           else if (!(role?.canSeeDashboard ?? false))
             IconButton(
-              tooltip: 'Выйти',
+              tooltip: l.settingsLogout,
               icon: const Icon(Icons.logout_rounded),
               onPressed: () =>
                   ref.read(sessionControllerProvider.notifier).logout(),
@@ -161,12 +163,10 @@ class _WorkLogsScreenState extends ConsumerState<WorkLogsScreen> {
               onRetry: () => ref.invalidate(workLogsControllerProvider),
               builder: (page) {
                 if (page.items.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.inbox_outlined,
-                    title: 'Записей нет',
-                    message:
-                        'Рабочие отчитываются через Telegram-бота — '
-                        'отчёты появятся здесь',
+                    title: l.workLogsEmptyTitle,
+                    message: l.workLogsEmptyHint,
                   );
                 }
 
@@ -237,13 +237,13 @@ class _StatusFilter extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(status.label),
+                label: Text(status.label(L.of(context))),
                 selected: value == status,
                 onSelected: (_) => onChanged(status),
               ),
             ),
           ChoiceChip(
-            label: const Text('Все'),
+            label: Text(L.of(context).workLogsAll),
             selected: value == null,
             onSelected: (_) => onChanged(null),
           ),
@@ -285,7 +285,7 @@ class _Footer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Всего по фильтру',
+                      L.of(context).workLogsTotal,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.outline,
                       ),
@@ -332,28 +332,30 @@ class _RejectDialogState extends State<_RejectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: const Text('Отклонить запись'),
+      title: Text(l.workLogsRejectTitle),
       content: TextField(
         controller: _reason,
         autofocus: true,
         maxLength: 255,
-        decoration: const InputDecoration(
-          labelText: 'Причина',
-          hintText: 'Например: посчитано дважды',
+        decoration: InputDecoration(
+          labelText: l.workLogsRejectReason,
+          hintText: l.workLogsRejectHint,
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           // Пустая строка, а не null: null означает «передумал»,
           // и без причины отклонить всё равно можно.
           onPressed: () => Navigator.of(context).pop(_reason.text.trim()),
           style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-          child: const Text('Отклонить'),
+          child: Text(l.workLogsReject),
         ),
       ],
     );

@@ -15,6 +15,7 @@ import 'widgets/piece_rate_dialog.dart';
 import 'widgets/product_dialog.dart';
 import 'widgets/stock_movement_dialog.dart';
 import 'widgets/telegram_link_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Справочники: модели, сотрудники, операции, расценки.
 ///
@@ -26,31 +27,33 @@ class CatalogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     return DefaultTabController(
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Справочники'),
+          title: Text(l.catalogTitle),
           actions: [
             // Калькулятор живёт здесь, а не отдельным разделом: он считает
             // по расценкам и моделям из соседних вкладок, и материалы для
             // него — такой же справочник.
             IconButton(
               icon: const Icon(Icons.calculate_outlined),
-              tooltip: 'Себестоимость',
+              tooltip: l.costingTitle,
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const CostingScreen()),
               ),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              Tab(text: 'Модели'),
-              Tab(text: 'Сотрудники'),
-              Tab(text: 'Операции'),
-              Tab(text: 'Расценки'),
+              Tab(text: l.catalogProducts),
+              Tab(text: l.catalogEmployees),
+              Tab(text: l.catalogOperations),
+              Tab(text: l.catalogRates),
             ],
           ),
         ),
@@ -74,6 +77,8 @@ class _ProductsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final products = ref.watch(catalogProductsProvider);
 
     return Scaffold(
@@ -87,12 +92,10 @@ class _ProductsTab extends ConsumerWidget {
         onRetry: () => ref.invalidate(catalogProductsProvider),
         builder: (list) {
           if (list.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.inventory_2_outlined,
-              title: 'Моделей нет',
-              message:
-                  'Добавьте модель — по ней считается остаток, '
-                  'себестоимость и сдельная расценка',
+              title: l.catalogProductsEmptyTitle,
+              message: l.catalogProductsEmptyHint,
             );
           }
 
@@ -111,7 +114,7 @@ class _ProductsTab extends ConsumerWidget {
                     title: Text('${product.sku} · ${product.name}'),
                     subtitle: Text(
                       '${Money.format(product.salePrice)} · '
-                      'остаток ${product.stockQuantity}',
+                      '${l.salesStockLeft(product.stockQuantity)}',
                       style: product.isLowStock
                           ? TextStyle(
                               color: Theme.of(context).colorScheme.error,
@@ -124,10 +127,16 @@ class _ProductsTab extends ConsumerWidget {
                         'stock' => _move(context, ref, product),
                         _ => _archive(context, ref, product),
                       },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Изменить')),
-                        PopupMenuItem(value: 'stock', child: Text('Склад')),
-                        PopupMenuItem(value: 'archive', child: Text('В архив')),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
+                        PopupMenuItem(
+                          value: 'stock',
+                          child: Text(l.catalogStock),
+                        ),
+                        PopupMenuItem(
+                          value: 'archive',
+                          child: Text(l.actionArchive),
+                        ),
                       ],
                     ),
                     onTap: () => _edit(context, ref, product),
@@ -174,10 +183,8 @@ class _ProductsTab extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'В архив?',
-      message:
-          '${product.name} исчезнет из списков продажи и заказа. '
-          'История продаж по нему останется.',
+      title: L.of(context).productArchiveQuestion,
+      message: L.of(context).productArchiveHint(product.name),
     );
 
     if (!confirmed || !context.mounted) return;
@@ -197,6 +204,8 @@ class _EmployeesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final employees = ref.watch(catalogEmployeesProvider);
 
     return Scaffold(
@@ -210,12 +219,10 @@ class _EmployeesTab extends ConsumerWidget {
         onRetry: () => ref.invalidate(catalogEmployeesProvider),
         builder: (list) {
           if (list.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.people_outline,
-              title: 'Сотрудников нет',
-              message:
-                  'Добавьте рабочего и подключите ему Telegram — '
-                  'после этого он сможет отчитываться о выработке',
+              title: l.catalogEmployeesEmptyTitle,
+              message: l.catalogEmployeesEmptyHint,
             );
           }
 
@@ -261,23 +268,20 @@ class _EmployeesTab extends ConsumerWidget {
                         _ => _fire(context, ref, employee),
                       },
                       itemBuilder: (_) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Изменить'),
-                        ),
+                        PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
                         if (employee.telegramLinked)
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'unlink',
-                            child: Text('Отвязать Telegram'),
+                            child: Text(l.telegramUnlink),
                           )
                         else
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'link',
-                            child: Text('Подключить Telegram'),
+                            child: Text(l.telegramLink),
                           ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'fire',
-                          child: Text('Уволить'),
+                          child: Text(l.employeeFire),
                         ),
                       ],
                     ),
@@ -327,10 +331,8 @@ class _EmployeesTab extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'Отвязать Telegram?',
-      message:
-          '${employee.fullName} перестанет отчитываться через бота. '
-          'Выработка, записанная раньше, останется.',
+      title: L.of(context).telegramUnlinkQuestion,
+      message: L.of(context).employeeUnlinkHint(employee.fullName),
     );
 
     if (!confirmed || !context.mounted) return;
@@ -349,10 +351,8 @@ class _EmployeesTab extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'Уволить?',
-      message:
-          '${employee.fullName} пропадёт из списков, но его выработка '
-          'и выплаты останутся в отчётах.',
+      title: L.of(context).employeeFireQuestion,
+      message: L.of(context).employeeFireHint(employee.fullName),
     );
 
     if (!confirmed || !context.mounted) return;
@@ -372,6 +372,8 @@ class _OperationsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final operations = ref.watch(catalogOperationsProvider);
 
     return Scaffold(
@@ -385,12 +387,10 @@ class _OperationsTab extends ConsumerWidget {
         onRetry: () => ref.invalidate(catalogOperationsProvider),
         builder: (list) {
           if (list.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.handyman_outlined,
-              title: 'Операций нет',
-              message:
-                  'Раскрой, затяжка, пошив — из них рабочий выбирает, '
-                  'что он сделал',
+              title: l.catalogOperationsEmptyTitle,
+              message: l.catalogOperationsEmptyHint,
             );
           }
 
@@ -414,9 +414,12 @@ class _OperationsTab extends ConsumerWidget {
                       onSelected: (value) => value == 'edit'
                           ? _edit(context, ref, operation)
                           : _archive(context, ref, operation),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Изменить')),
-                        PopupMenuItem(value: 'archive', child: Text('В архив')),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
+                        PopupMenuItem(
+                          value: 'archive',
+                          child: Text(l.actionArchive),
+                        ),
                       ],
                     ),
                     onTap: () => _edit(context, ref, operation),
@@ -450,10 +453,8 @@ class _OperationsTab extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'В архив?',
-      message:
-          '«${operation.name}» пропадёт из бота и форм выработки. '
-          'Записанная по ней выработка останется.',
+      title: L.of(context).productArchiveQuestion,
+      message: L.of(context).operationArchiveHint(operation.name),
     );
 
     if (!confirmed || !context.mounted) return;
@@ -473,6 +474,8 @@ class _PieceRatesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final rates = ref.watch(pieceRatesProvider);
     final role = ref.watch(sessionControllerProvider).value?.role;
 
@@ -487,12 +490,10 @@ class _PieceRatesTab extends ConsumerWidget {
         onRetry: () => ref.invalidate(pieceRatesProvider),
         builder: (list) {
           if (list.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.price_change_outlined,
-              title: 'Расценок нет',
-              message:
-                  'Без ставки выработка запишется, но зарплата по ней '
-                  'не начислится',
+              title: l.catalogRatesEmptyTitle,
+              message: l.catalogRatesEmptyHint,
             );
           }
 
@@ -512,8 +513,8 @@ class _PieceRatesTab extends ConsumerWidget {
                       '${rate.operation.name} · ${Money.format(rate.rate)}',
                     ),
                     subtitle: Text(
-                      '${rate.product?.name ?? 'Все модели'} · '
-                      '${rate.employee?.fullName ?? 'Все сотрудники'}',
+                      '${rate.product?.name ?? l.catalogAllProducts} · '
+                      '${rate.employee?.fullName ?? l.catalogAllEmployees}',
                     ),
                     // Удаление ставки — правка того, по чему считалась
                     // зарплата, поэтому оно только у владельца.
@@ -549,10 +550,8 @@ class _PieceRatesTab extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'Удалить расценку?',
-      message:
-          'Уже начисленная по ней зарплата не изменится — пересчёт '
-          'коснётся только открытого периода.',
+      title: L.of(context).rateDeleteQuestion,
+      message: L.of(context).rateDeleteHint,
     );
 
     if (!confirmed || !context.mounted) return;
@@ -580,11 +579,11 @@ Future<bool> _confirm(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: const Text('Отмена'),
+          child: Text(L.of(dialogContext).actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: const Text('Да'),
+          child: Text(L.of(dialogContext).actionYes),
         ),
       ],
     ),
