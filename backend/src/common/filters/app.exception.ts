@@ -77,4 +77,11 @@ export const Errors = {
 
   workLogNotPending: () =>
     new AppException(422, 'WORK_LOG_NOT_PENDING', 'error.work_log_not_pending'),
+
+  calculationWithoutProduct: () =>
+    new AppException(
+      422,
+      'CALCULATION_WITHOUT_PRODUCT',
+      'error.calculation_without_product',
+    ),
 };

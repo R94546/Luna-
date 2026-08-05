@@ -19,6 +19,7 @@
     "test:sales": "ts-node test/sales-flow.manual.ts",
     "test:analytics": "ts-node test/analytics-flow.manual.ts",
     "test:idempotency": "ts-node test/idempotency-flow.manual.ts",
+    "test:costing": "ts-node test/costing-flow.manual.ts",
     "test:reports": "ts-node test/reports-flow.manual.ts",
     "test:reports:http": "ts-node test/reports-http.manual.ts",
     "test:cleanup": "ts-node test/cleanup.manual.ts",

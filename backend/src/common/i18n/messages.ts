@@ -52,6 +52,8 @@ const uz: Dict = {
   'validation.positive': "Qiymat noldan katta bo'lishi kerak",
   'validation.date_format': 'Sana YYYY-MM-DD koʻrinishida boʻlishi kerak',
   'validation.date_range': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
+  'validation.material_required': 'Materialni tanlang yoki nomini kiriting',
+  'validation.material_price_required': "Bir martalik material uchun o'lchov va narx kerak",
   'validation.period_order': 'Davr oxiri boshidan oldin boʻlishi mumkin emas',
   'validation.nothing_to_update': "O'zgartirish uchun hech narsa yuborilmadi",
   'validation.category_not_manual':
@@ -70,6 +72,7 @@ const uz: Dict = {
 
   // Выработка и зарплата
   'error.work_log_not_pending': 'Faqat tasdiqlanmagan yozuvni tahrirlash mumkin',
+  'error.calculation_without_product': 'Kalkulyatsiya modelga bogʻlanmagan — tannarxni qayerga yozish nomaʼlum',
   'error.work_log_in_payroll': "Bu yozuv ish haqi davriga kiritilgan — o'zgartirib bo'lmaydi",
   'error.period_already_closed': 'Ish haqi davri allaqachon yopilgan',
   'error.period_overlap': 'Bu sanalar {from} — {to} davri bilan kesishadi',
@@ -125,6 +128,8 @@ const ru: Dict = {
   'validation.positive': 'Значение должно быть больше нуля',
   'validation.date_format': 'Дата должна быть в формате ГГГГ-ММ-ДД',
   'validation.date_range': 'Конец периода не может быть раньше начала',
+  'validation.material_required': 'Выберите материал или укажите название',
+  'validation.material_price_required': 'Для разового материала нужны единица и цена',
   'validation.period_order': 'Конец периода не может быть раньше начала',
   'validation.nothing_to_update': 'Не передано ни одного поля для изменения',
   'validation.category_not_manual':
@@ -141,6 +146,7 @@ const ru: Dict = {
 
   // Выработка и зарплата
   'error.work_log_not_pending': 'Изменить можно только неподтверждённую запись',
+  'error.calculation_without_product': 'Расчёт не привязан к модели — некуда записывать себестоимость',
   'error.work_log_in_payroll': 'Запись вошла в зарплатный период — изменить нельзя',
   'error.period_already_closed': 'Зарплатный период уже закрыт',
   'error.period_overlap': 'Эти даты пересекаются с периодом {from} — {to}',
