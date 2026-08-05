@@ -1,6 +1,8 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:luna_app/core/format/money.dart';
+import 'package:luna_app/l10n/app_localizations.dart';
 
 /// Неразрывный пробел.
 ///
@@ -11,6 +13,13 @@ import 'package:luna_app/core/format/money.dart';
 const nbsp = '\u00A0';
 
 void main() {
+  /// Подписи валюты живут в словаре и по умолчанию узбекские. Тест
+  /// проверяет разряды и округление, поэтому язык задаётся явно —
+  /// иначе он проверял бы ещё и то, какой язык подставился первым.
+  setUp(
+    () async => Money.applyLocale(await L.delegate.load(const Locale('ru'))),
+  );
+
   group('Money.parse', () {
     test('разбирает строку с копейками без потери точности', () {
       expect(Money.parse('84300000.00'), Decimal.parse('84300000.00'));
@@ -117,6 +126,24 @@ void main() {
     /// и показать «0%» значило бы соврать, что ничего не изменилось.
     test('null — прочерк, а не ноль процентов', () {
       expect(Money.change(null), '—');
+    });
+  });
+
+  group('Money и язык', () {
+    /// Подпись валюты и сокращения следуют за языком: «сум» в узбекском
+    /// интерфейсе читается как чужое слово, а «ming» в русском — наоборот.
+    test('узбекский', () async {
+      Money.applyLocale(await L.delegate.load(const Locale('uz')));
+
+      expect(Money.format('12400000'), '12${nbsp}400${nbsp}000${nbsp}so\'m');
+      expect(Money.compact('84300000'), '84,3${nbsp}mln');
+    });
+
+    test('русский', () async {
+      Money.applyLocale(await L.delegate.load(const Locale('ru')));
+
+      expect(Money.format('1000'), '1${nbsp}000$nbspсум');
+      expect(Money.compact('2500000000'), '2,5$nbspмлрд');
     });
   });
 }

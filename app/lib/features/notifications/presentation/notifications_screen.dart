@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/async_value_builder.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/notification_dto.dart';
 import 'providers/notifications_provider.dart';
 
@@ -13,17 +14,18 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationsProvider);
+    final l = L.of(context);
     final unread = notifications.value?.unread ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Уведомления'),
+        title: Text(l.notificationsTitle),
         actions: [
           if (unread > 0)
             TextButton(
               onPressed: () =>
                   ref.read(notificationsProvider.notifier).markAllRead(),
-              child: const Text('Прочитать все'),
+              child: Text(l.notificationsMarkAll),
             ),
         ],
       ),
@@ -32,12 +34,10 @@ class NotificationsScreen extends ConsumerWidget {
         onRetry: () => ref.read(notificationsProvider.notifier).refresh(),
         builder: (page) {
           if (page.items.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.notifications_none,
-              title: 'Пока тихо',
-              message:
-                  'Здесь появятся заканчивающийся товар '
-                  'и заказы с вышедшим сроком',
+              title: l.notificationsEmptyTitle,
+              message: l.notificationsEmptyHint,
             );
           }
 
@@ -87,7 +87,7 @@ class _NotificationTile extends StatelessWidget {
       ),
       subtitle: Text(notification.body),
       trailing: Text(
-        _ago(notification.createdAt),
+        _ago(notification.createdAt, L.of(context)),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.outline,
         ),
@@ -98,12 +98,12 @@ class _NotificationTile extends StatelessWidget {
 
   /// «12 мин», «3 ч», «04.08». Точное время в уведомлении не нужно —
   /// важно, свежее оно или висит со вчера.
-  static String _ago(DateTime moment) {
+  static String _ago(DateTime moment, L l10n) {
     final difference = DateTime.now().difference(moment);
 
-    if (difference.inMinutes < 1) return 'только что';
-    if (difference.inHours < 1) return '${difference.inMinutes} мин';
-    if (difference.inDays < 1) return '${difference.inHours} ч';
+    if (difference.inMinutes < 1) return l10n.timeJustNow;
+    if (difference.inHours < 1) return l10n.timeMinutes(difference.inMinutes);
+    if (difference.inDays < 1) return l10n.timeHours(difference.inHours);
 
     return '${moment.day.toString().padLeft(2, '0')}.'
         '${moment.month.toString().padLeft(2, '0')}';

@@ -9,6 +9,8 @@ import 'package:luna_app/features/auth/domain/user_role.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/settings/presentation/settings_screen.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter({this.rejectPassword = false});
 
@@ -86,7 +88,7 @@ Future<_FakeAdapter> _pump(
         dioProvider.overrideWithValue(dio),
         sessionControllerProvider.overrideWith(_FakeSession.new),
       ],
-      child: const MaterialApp(home: SettingsScreen()),
+      child: localizedApp(const SettingsScreen()),
     ),
   );
 

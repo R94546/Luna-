@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/sales/presentation/widgets/new_sale_sheet.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   final List<String?> saleKeys = [];
   final List<Map<String, dynamic>> saleBodies = [];
@@ -100,7 +102,7 @@ Future<_FakeAdapter> _pump(WidgetTester tester, {int failFirst = 0}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(home: Scaffold(body: NewSaleSheet())),
+      child: localizedApp(const Scaffold(body: NewSaleSheet())),
     ),
   );
 

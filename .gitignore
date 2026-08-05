@@ -23,6 +23,7 @@ app/ios/Pods/
 app/android/.gradle/
 app/android/local.properties
 app/**/*.g.dart
+app/lib/l10n/app_localizations*.dart
 app/**/*.freezed.dart
 *.iml
 

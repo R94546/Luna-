@@ -1,3 +1,5 @@
+import '../../../l10n/app_localizations.dart';
+
 /// Роли из бэкенда.
 ///
 /// Определяют не только доступ, но и стартовый экран: дашборд помечен
@@ -38,10 +40,14 @@ enum UserRole {
   /// раздел, где половина вкладок ответит 403, незачем.
   bool get canManageCatalog => canApproveWorkLogs;
 
-  String get label => switch (this) {
-    UserRole.superadmin => 'Суперадмин',
-    UserRole.owner => 'Владелец',
-    UserRole.admin => 'Мастер',
-    UserRole.accountant => 'Бухгалтер',
+  /// Название роли на языке интерфейса.
+  ///
+  /// Локаль передаётся параметром, а не берётся из статического держателя:
+  /// подпись видна ровно в одном месте — в настройках, — и там контекст есть.
+  String label(L l10n) => switch (this) {
+    UserRole.superadmin => l10n.roleSuperadmin,
+    UserRole.owner => l10n.roleOwner,
+    UserRole.admin => l10n.roleAdmin,
+    UserRole.accountant => l10n.roleAccountant,
   };
 }

@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/payroll/presentation/period_detail_screen.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter({this.status = 'OPEN'});
 
@@ -72,7 +74,7 @@ Future<_FakeAdapter> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(home: PeriodDetailScreen(periodId: 'period-1')),
+      child: localizedApp(const PeriodDetailScreen(periodId: 'period-1')),
     ),
   );
 

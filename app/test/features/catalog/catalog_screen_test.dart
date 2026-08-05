@@ -9,6 +9,8 @@ import 'package:luna_app/features/auth/domain/user_role.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/catalog/presentation/catalog_screen.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   /// Тела запросов, ушедших не на чтение, — по ним проверяем, что именно
   /// экран отправил на сервер.
@@ -137,7 +139,7 @@ Future<_FakeAdapter> _pump(
         dioProvider.overrideWithValue(dio),
         sessionControllerProvider.overrideWith(() => _FakeSession(role)),
       ],
-      child: const MaterialApp(home: CatalogScreen()),
+      child: localizedApp(const CatalogScreen()),
     ),
   );
 

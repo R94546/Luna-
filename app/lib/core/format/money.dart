@@ -1,5 +1,11 @@
 import 'package:decimal/decimal.dart';
 
+import '../../l10n/app_localizations.dart';
+
+/// Неразрывный пробел. Записан кодом намеренно: от обычного он неотличим
+/// на глаз, и в редакторе его легко потерять при правке.
+const _nbsp = ' ';
+
 /// Работа с суммами.
 ///
 /// Бэкенд отдаёт деньги строками (`"84300000.00"`) именно потому, что
@@ -8,6 +14,24 @@ import 'package:decimal/decimal.dart';
 /// такие строки в `double` — значит вернуть проблему, от которой уходили.
 class Money {
   const Money._();
+
+  /// Подписи, зависящие от языка.
+  ///
+  /// Суммы форматируются отовсюду — из карточек, диалогов, провайдеров, —
+  /// и `BuildContext` там есть не всегда. Одно поле, обновляемое при смене
+  /// языка, честнее, чем протаскивание локали в полсотни мест ради слова
+  /// «сум».
+  static String _currency = "so'm";
+  static String _thousand = 'ming';
+  static String _million = 'mln';
+  static String _billion = 'mlrd';
+
+  static void applyLocale(L l10n) {
+    _currency = l10n.moneyCurrency;
+    _thousand = l10n.moneyThousand;
+    _million = l10n.moneyMillion;
+    _billion = l10n.moneyBillion;
+  }
 
   /// Разбор суммы из ответа API. Мусор превращается в ноль, а не в исключение:
   /// уронить весь дашборд из-за одного кривого поля хуже, чем показать ноль.
@@ -26,7 +50,7 @@ class Money {
     final amount = parse(value);
     final formatted = _group(amount);
 
-    return withCurrency ? '$formatted сум' : formatted;
+    return withCurrency ? '$formatted$_nbsp$_currency' : formatted;
   }
 
   /// Компактный вид для карточек: «84,3 млн».
@@ -39,13 +63,13 @@ class Money {
     final sign = amount.sign < 0 ? '-' : '';
 
     if (abs >= Decimal.fromInt(1000000000)) {
-      return '$sign${_short(abs, 1000000000)} млрд';
+      return '$sign${_short(abs, 1000000000)}$_nbsp$_billion';
     }
     if (abs >= Decimal.fromInt(1000000)) {
-      return '$sign${_short(abs, 1000000)} млн';
+      return '$sign${_short(abs, 1000000)}$_nbsp$_million';
     }
     if (abs >= Decimal.fromInt(1000)) {
-      return '$sign${_short(abs, 1000)} тыс';
+      return '$sign${_short(abs, 1000)}$_nbsp$_thousand';
     }
 
     return _group(amount);
@@ -85,7 +109,7 @@ class Money {
     final buffer = StringBuffer();
 
     for (var i = 0; i < digits.length; i++) {
-      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(' ');
+      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(_nbsp);
       buffer.write(digits[i]);
     }
 

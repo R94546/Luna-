@@ -1,0 +1,84 @@
+{
+  "@@locale": "uz",
+
+  "appSubtitle": "Poyabzal sexini boshqarish",
+
+  "actionCancel": "Bekor qilish",
+  "actionRetry": "Qayta urinish",
+  "actionSave": "Saqlash",
+  "actionChange": "O'zgartirish",
+  "actionOpen": "Ochish",
+  "actionRemove": "Olib tashlash",
+
+  "errorSomethingWrong": "Xatolik yuz berdi",
+  "errorNetwork": "Server bilan aloqa yo'q. Ulanishni tekshirib, qayta urinib ko'ring",
+  "errorServer": "Server xatosi",
+  "errorServerWithCode": "Server xatosi ({code})",
+  "@errorServerWithCode": {
+    "placeholders": { "code": { "type": "int" } }
+  },
+
+  "moneyCurrency": "so'm",
+  "moneyThousand": "ming",
+  "moneyMillion": "mln",
+  "moneyBillion": "mlrd",
+
+  "timeJustNow": "hozirgina",
+  "timeMinutes": "{count} daq",
+  "@timeMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "timeHours": "{count} soat",
+  "@timeHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "roleSuperadmin": "Superadmin",
+  "roleOwner": "Egasi",
+  "roleAdmin": "Usta",
+  "roleAccountant": "Buxgalter",
+
+  "loginPhone": "Telefon",
+  "loginPhoneRequired": "Telefon raqamini kiriting",
+  "loginPassword": "Parol",
+  "loginPasswordRequired": "Parolni kiriting",
+  "loginSubmit": "Kirish",
+  "loginFailed": "Kirib bo'lmadi",
+
+  "navDashboard": "Asosiy",
+  "navWorkLogs": "Ish qaydi",
+  "navOrders": "Buyurtmalar",
+  "navSales": "Savdo",
+  "navPayroll": "Oylik",
+  "navCash": "Pul",
+  "navCatalog": "Ma'lumotnomalar",
+  "navCustomers": "Mijozlar",
+  "navSettings": "Sozlamalar",
+  "navMore": "Yana",
+
+  "settingsTitle": "Sozlamalar",
+  "settingsNotifications": "Bildirishnomalar",
+  "settingsNotificationsHint": "Qoldiqlar va muddati o'tgan buyurtmalar",
+  "settingsReports": "Hisobotlar",
+  "settingsReportsHint": "Excel va PDF ga yuklash",
+  "settingsLanguage": "Til",
+  "settingsLanguageSystem": "Tizimdagidek",
+  "settingsChangePassword": "Parolni o'zgartirish",
+  "settingsServer": "Server",
+  "settingsLogout": "Chiqish",
+  "settingsLogoutQuestion": "Chiqasizmi?",
+  "settingsLogoutHint": "Telefon va parol bilan qaytadan kirish kerak bo'ladi.",
+
+  "passwordCurrent": "Joriy parol",
+  "passwordNew": "Yangi parol",
+  "passwordRepeat": "Yana bir bor",
+  "passwordFillBoth": "Ikkala parolni ham kiriting",
+  "passwordTooShort": "Kamida 6 ta belgi",
+  "passwordMismatch": "Parollar mos kelmadi",
+  "passwordChanged": "Parol o'zgartirildi",
+
+  "notificationsTitle": "Bildirishnomalar",
+  "notificationsMarkAll": "Barchasini o'qildi",
+  "notificationsEmptyTitle": "Hozircha jim",
+  "notificationsEmptyHint": "Bu yerda tugayotgan tovar va muddati o'tgan buyurtmalar ko'rinadi"
+}

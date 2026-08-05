@@ -13,6 +13,7 @@ import '../../features/payroll/presentation/payroll_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/work_logs/presentation/work_logs_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Раздел приложения в нижней навигации.
 class _Section {
@@ -51,70 +52,70 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
-  List<_Section> _sectionsFor(UserRole? role) {
+  List<_Section> _sectionsFor(UserRole? role, L l) {
     return [
       if (role?.canSeeDashboard ?? false)
-        const _Section(
-          label: 'Главная',
+        _Section(
+          label: l.navDashboard,
           icon: Icons.insights_outlined,
           selectedIcon: Icons.insights,
-          screen: DashboardScreen(),
+          screen: const DashboardScreen(),
         ),
-      const _Section(
-        label: 'Выработка',
+      _Section(
+        label: l.navWorkLogs,
         icon: Icons.assignment_outlined,
         selectedIcon: Icons.assignment,
-        screen: WorkLogsScreen(),
+        screen: const WorkLogsScreen(),
       ),
       // Заказы ведёт мастер: это про производство, а не про деньги.
-      const _Section(
-        label: 'Заказы',
+      _Section(
+        label: l.navOrders,
         icon: Icons.receipt_long_outlined,
         selectedIcon: Icons.receipt_long,
-        screen: OrdersScreen(),
+        screen: const OrdersScreen(),
       ),
       // Зарплата, продажи и касса — зона владельца и бухгалтера. Мастер их
       // не видит: на бэкенде эти эндпоинты ему закрыты.
       if (role?.canSeeMoney ?? false) ...[
-        const _Section(
-          label: 'Продажи',
+        _Section(
+          label: l.navSales,
           icon: Icons.point_of_sale_outlined,
           selectedIcon: Icons.point_of_sale,
-          screen: SalesScreen(),
+          screen: const SalesScreen(),
         ),
-        const _Section(
-          label: 'Зарплата',
+        _Section(
+          label: l.navPayroll,
           icon: Icons.payments_outlined,
           selectedIcon: Icons.payments,
-          screen: PayrollScreen(),
+          screen: const PayrollScreen(),
         ),
-        const _Section(
-          label: 'Деньги',
+        _Section(
+          label: l.navCash,
           icon: Icons.account_balance_wallet_outlined,
           selectedIcon: Icons.account_balance_wallet,
-          screen: CashScreen(),
+          screen: const CashScreen(),
         ),
       ],
       // Справочники и клиенты стоят после ежедневных разделов намеренно:
       // их заполняют при запуске цеха и потом почти не открывают.
       if (role?.canManageCatalog ?? false)
-        const _Section(
-          label: 'Справочники',
+        _Section(
+          label: l.navCatalog,
           icon: Icons.category_outlined,
           selectedIcon: Icons.category,
-          screen: CatalogScreen(),
+          screen: const CatalogScreen(),
         ),
-      const _Section(
-        label: 'Клиенты',
+      _Section(
+        label: l.navCustomers,
         icon: Icons.storefront_outlined,
         selectedIcon: Icons.storefront,
-        screen: CustomersScreen(),
+        screen: const CustomersScreen(),
       ),
       // Уведомления и отчёты живут внутри настроек, поэтому счётчик
       // непрочитанных висит на этой вкладке: иначе о них узнают, только
       // случайно туда заглянув.
       _Section(
-        label: 'Настройки',
+        label: l.navSettings,
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,
         screen: const SettingsScreen(),
@@ -127,7 +128,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   Widget build(BuildContext context) {
     final role = ref.watch(sessionControllerProvider).value?.role;
     // Выработка доступна всем ролям, поэтому список никогда не пуст.
-    final sections = _sectionsFor(role);
+    final sections = _sectionsFor(role, L.of(context));
 
     // Роль могла смениться (перезаход другим пользователем) — индекс
     // за пределами списка уронил бы IndexedStack.
@@ -218,7 +219,7 @@ class _BottomBar extends StatelessWidget {
                 )
               : const Icon(Icons.more_horiz),
           // Подписываем текущим разделом, чтобы человек видел, где он.
-          label: inHidden ? sections[index].label : 'Ещё',
+          label: inHidden ? sections[index].label : L.of(context).navMore,
         ),
       ],
     );
