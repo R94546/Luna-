@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/orders/presentation/order_detail_screen.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter({
     this.status = 'NEW',
@@ -96,7 +98,7 @@ Future<_FakeAdapter> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(home: OrderDetailScreen(orderId: 'order-1')),
+      child: localizedApp(const OrderDetailScreen(orderId: 'order-1')),
     ),
   );
 

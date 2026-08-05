@@ -9,6 +9,8 @@ import 'package:luna_app/features/catalog/data/catalog_dto.dart';
 import 'package:luna_app/features/costing/data/costing_dto.dart';
 import 'package:luna_app/features/costing/presentation/costing_screen.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   final List<Map<String, dynamic>> calculations = [];
   Map<String, dynamic>? saved;
@@ -113,7 +115,7 @@ Future<_FakeAdapter> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(home: CostingScreen()),
+      child: localizedApp(const CostingScreen()),
     ),
   );
 

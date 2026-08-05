@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_config.dart';
+import '../../../core/l10n/locale_controller.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/presentation/providers/session_provider.dart';
 import '../../notifications/presentation/notifications_screen.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
@@ -20,10 +22,11 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionControllerProvider).value;
     final unread = ref.watch(unreadCountProvider);
+    final l = L.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки')),
+      appBar: AppBar(title: Text(l.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -40,7 +43,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     [
-                      session?.role.label,
+                      session?.role.label(l),
                       session?.phone,
                     ].whereType<String>().join(' · '),
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -74,8 +77,8 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
-                  title: const Text('Уведомления'),
-                  subtitle: const Text('Остатки и просроченные заказы'),
+                  title: Text(l.settingsNotifications),
+                  subtitle: Text(l.settingsNotificationsHint),
                   trailing: unread > 0
                       ? Badge(label: Text('$unread'))
                       : const Icon(Icons.chevron_right),
@@ -87,8 +90,8 @@ class SettingsScreen extends ConsumerWidget {
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.description_outlined),
-                    title: const Text('Отчёты'),
-                    subtitle: const Text('Выгрузка в Excel и PDF'),
+                    title: Text(l.settingsReports),
+                    subtitle: Text(l.settingsReportsHint),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _open(context, const ReportsScreen()),
                   ),
@@ -100,15 +103,38 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
+                // Язык выбирается явно, а не только берётся из системы:
+                // телефон бухгалтера может стоять на русском, а мастера —
+                // на узбекском, и приложение у обоих одно.
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(l.settingsLanguage),
+                  trailing: DropdownButton<String?>(
+                    value: ref.watch(localeControllerProvider)?.languageCode,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      DropdownMenuItem(child: Text(l.settingsLanguageSystem)),
+                      for (final locale in supportedLocales)
+                        DropdownMenuItem(
+                          value: locale.languageCode,
+                          child: Text(_languageName(locale.languageCode)),
+                        ),
+                    ],
+                    onChanged: (code) => ref
+                        .read(localeControllerProvider.notifier)
+                        .select(code == null ? null : Locale(code)),
+                  ),
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.lock_outline),
-                  title: const Text('Сменить пароль'),
+                  title: Text(l.settingsChangePassword),
                   onTap: () => _changePassword(context),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.dns_outlined),
-                  title: const Text('Сервер'),
+                  title: Text(l.settingsServer),
                   subtitle: Text(ApiConfig.baseUrl),
                 ),
               ],
@@ -119,7 +145,7 @@ class SettingsScreen extends ConsumerWidget {
             child: ListTile(
               leading: Icon(Icons.logout, color: theme.colorScheme.error),
               title: Text(
-                'Выйти',
+                l.settingsLogout,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
               onTap: () => _logout(context, ref),
@@ -129,6 +155,13 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// Название языка пишется на нём самом: человек, который не читает
+  /// по-узбекски, всё равно узнает «Русский» в списке.
+  String _languageName(String code) => switch (code) {
+    'uz' => "O'zbekcha",
+    _ => 'Русский',
+  };
 
   void _open(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
@@ -143,7 +176,7 @@ class SettingsScreen extends ConsumerWidget {
     if (changed == true && context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Пароль изменён')));
+      ).showSnackBar(SnackBar(content: Text(L.of(context).passwordChanged)));
     }
   }
 
@@ -151,16 +184,16 @@ class SettingsScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Выйти?'),
-        content: const Text('Придётся войти заново по телефону и паролю.'),
+        title: Text(L.of(dialogContext).settingsLogoutQuestion),
+        content: Text(L.of(dialogContext).settingsLogoutHint),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(L.of(dialogContext).actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Выйти'),
+            child: Text(L.of(dialogContext).settingsLogout),
           ),
         ],
       ),

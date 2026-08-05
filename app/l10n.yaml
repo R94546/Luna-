@@ -1,0 +1,7 @@
+# Узбекский — шаблон, а не русский: это основной язык цеха, и новые строки
+# должны появляться сначала на нём. Русский остаётся запасным.
+arb-dir: lib/l10n
+template-arb-file: app_uz.arb
+output-localization-file: app_localizations.dart
+output-class: L
+nullable-getter: false

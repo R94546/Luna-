@@ -1,13 +1,14 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/domain/session.dart';
 import 'package:luna_app/features/auth/domain/user_role.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/work_logs/presentation/work_logs_screen.dart';
+
+import '../../support/localized_app.dart';
 
 /// Сервер, отдающий заготовленный список и считающий вызовы.
 class _FakeAdapter implements HttpClientAdapter {
@@ -111,7 +112,7 @@ Future<_FakeAdapter> _pumpScreen(
         dioProvider.overrideWithValue(dio),
         sessionControllerProvider.overrideWith(() => _FakeSession(role)),
       ],
-      child: const MaterialApp(home: WorkLogsScreen()),
+      child: localizedApp(const WorkLogsScreen()),
     ),
   );
 

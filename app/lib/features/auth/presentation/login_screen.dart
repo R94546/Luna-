@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import 'providers/session_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -39,6 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionControllerProvider);
+    final l = L.of(context);
     final busy = session.isLoading;
 
     // Ошибку показываем из ответа сервера: он уже перевёл её и знает
@@ -67,8 +69,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[\d+ ()-]')),
                       ],
-                      decoration: const InputDecoration(
-                        labelText: 'Телефон',
+                      decoration: InputDecoration(
+                        labelText: l.loginPhone,
                         hintText: '+998 90 123-45-67',
                         prefixIcon: Icon(Icons.phone_outlined),
                       ),
@@ -76,7 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // «901234567», и «+998 90 123-45-67». Клиент проверяет
                       // только то, что поле не пустое.
                       validator: (value) => (value ?? '').trim().isEmpty
-                          ? 'Введите телефон'
+                          ? l.loginPhoneRequired
                           : null,
                     ),
                     const SizedBox(height: 16),
@@ -87,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
                       decoration: InputDecoration(
-                        labelText: 'Пароль',
+                        labelText: l.loginPassword,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -98,8 +100,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
-                      validator: (value) =>
-                          (value ?? '').isEmpty ? 'Введите пароль' : null,
+                      validator: (value) => (value ?? '').isEmpty
+                          ? l.loginPasswordRequired
+                          : null,
                     ),
                     if (error != null) ...[
                       const SizedBox(height: 16),
@@ -116,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Войти'),
+                          : Text(l.loginSubmit),
                     ),
                   ],
                 ),
@@ -155,7 +158,7 @@ class _Logo extends StatelessWidget {
         Text('Luna', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 4),
         Text(
-          'Управление обувным цехом',
+          L.of(context).appSubtitle,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: scheme.outline),
@@ -174,7 +177,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = error is ApiException
         ? (error as ApiException).message
-        : 'Не удалось войти';
+        : L.of(context).loginFailed;
 
     return Container(
       padding: const EdgeInsets.all(14),

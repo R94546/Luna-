@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_exception.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 
 class ChangePasswordDialog extends ConsumerStatefulWidget {
@@ -33,14 +34,14 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     final next = _next.text;
 
     if (current.isEmpty || next.isEmpty) {
-      setState(() => _error = 'Заполните оба пароля');
+      setState(() => _error = L.of(context).passwordFillBoth);
       return;
     }
 
     // Совпадение проверяем здесь: гонять запрос ради опечатки в повторе
     // незачем, а сервер второго поля всё равно не видит.
     if (next != _repeat.text) {
-      setState(() => _error = 'Пароли не совпадают');
+      setState(() => _error = L.of(context).passwordMismatch);
       return;
     }
 
@@ -66,8 +67,10 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: const Text('Смена пароля'),
+      title: Text(l.settingsChangePassword),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -78,16 +81,16 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
               enabled: !_busy,
               autofocus: true,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Текущий пароль'),
+              decoration: InputDecoration(labelText: l.passwordCurrent),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _next,
               enabled: !_busy,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Новый пароль',
-                helperText: 'Не короче 6 символов',
+              decoration: InputDecoration(
+                labelText: l.passwordNew,
+                helperText: l.passwordTooShort,
               ),
             ),
             const SizedBox(height: 12),
@@ -95,7 +98,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
               controller: _repeat,
               enabled: !_busy,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Ещё раз'),
+              decoration: InputDecoration(labelText: l.passwordRepeat),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -110,7 +113,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -121,7 +124,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Сменить'),
+              : Text(l.actionChange),
         ),
       ],
     );

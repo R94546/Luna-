@@ -9,6 +9,8 @@ import 'package:luna_app/features/cash/data/cash_dto.dart';
 import 'package:luna_app/features/cash/presentation/cash_screen.dart';
 import 'package:luna_app/features/cash/presentation/widgets/expense_dialog.dart';
 
+import '../../support/localized_app.dart';
+
 class _FakeAdapter implements HttpClientAdapter {
   final List<String?> expenseKeys = [];
 
@@ -116,7 +118,7 @@ Future<_FakeAdapter> _pump(WidgetTester tester, {Widget? widget}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: MaterialApp(home: widget ?? const CashScreen()),
+      child: localizedApp(widget ?? const CashScreen()),
     ),
   );
 

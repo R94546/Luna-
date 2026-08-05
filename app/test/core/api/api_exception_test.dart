@@ -83,7 +83,9 @@ void main() {
     );
 
     expect(exception.isNetwork, isTrue);
-    expect(exception.message, contains('связи'));
+    // Текст берётся из словаря и по умолчанию узбекский: сервер сюда
+    // ничего не прислал, сказать что-то всё равно надо.
+    expect(exception.message, contains('aloqa'));
   });
 
   test('таймаут тоже считается проблемой сети', () {

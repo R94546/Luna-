@@ -1,0 +1,75 @@
+{
+  "@@locale": "ru",
+
+  "appSubtitle": "Управление обувным цехом",
+
+  "actionCancel": "Отмена",
+  "actionRetry": "Повторить",
+  "actionSave": "Сохранить",
+  "actionChange": "Сменить",
+  "actionOpen": "Открыть",
+  "actionRemove": "Убрать",
+
+  "errorSomethingWrong": "Что-то пошло не так",
+  "errorNetwork": "Нет связи с сервером. Проверьте подключение и попробуйте снова",
+  "errorServer": "Ошибка сервера",
+  "errorServerWithCode": "Ошибка сервера ({code})",
+
+  "moneyCurrency": "сум",
+  "moneyThousand": "тыс",
+  "moneyMillion": "млн",
+  "moneyBillion": "млрд",
+
+  "timeJustNow": "только что",
+  "timeMinutes": "{count} мин",
+  "timeHours": "{count} ч",
+
+  "roleSuperadmin": "Суперадмин",
+  "roleOwner": "Владелец",
+  "roleAdmin": "Мастер",
+  "roleAccountant": "Бухгалтер",
+
+  "loginPhone": "Телефон",
+  "loginPhoneRequired": "Введите телефон",
+  "loginPassword": "Пароль",
+  "loginPasswordRequired": "Введите пароль",
+  "loginSubmit": "Войти",
+  "loginFailed": "Не удалось войти",
+
+  "navDashboard": "Главная",
+  "navWorkLogs": "Выработка",
+  "navOrders": "Заказы",
+  "navSales": "Продажи",
+  "navPayroll": "Зарплата",
+  "navCash": "Деньги",
+  "navCatalog": "Справочники",
+  "navCustomers": "Клиенты",
+  "navSettings": "Настройки",
+  "navMore": "Ещё",
+
+  "settingsTitle": "Настройки",
+  "settingsNotifications": "Уведомления",
+  "settingsNotificationsHint": "Остатки и просроченные заказы",
+  "settingsReports": "Отчёты",
+  "settingsReportsHint": "Выгрузка в Excel и PDF",
+  "settingsLanguage": "Язык",
+  "settingsLanguageSystem": "Как в системе",
+  "settingsChangePassword": "Сменить пароль",
+  "settingsServer": "Сервер",
+  "settingsLogout": "Выйти",
+  "settingsLogoutQuestion": "Выйти?",
+  "settingsLogoutHint": "Придётся войти заново по телефону и паролю.",
+
+  "passwordCurrent": "Текущий пароль",
+  "passwordNew": "Новый пароль",
+  "passwordRepeat": "Ещё раз",
+  "passwordFillBoth": "Заполните оба пароля",
+  "passwordTooShort": "Не короче 6 символов",
+  "passwordMismatch": "Пароли не совпадают",
+  "passwordChanged": "Пароль изменён",
+
+  "notificationsTitle": "Уведомления",
+  "notificationsMarkAll": "Прочитать все",
+  "notificationsEmptyTitle": "Пока тихо",
+  "notificationsEmptyHint": "Здесь появятся заканчивающийся товар и заказы с вышедшим сроком"
+}

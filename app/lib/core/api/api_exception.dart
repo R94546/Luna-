@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../l10n/fallback_texts.dart';
+
 /// Ошибка от API в том виде, в каком её можно показать пользователю.
 ///
 /// Бэкенд отдаёт единый формат и уже локализованное сообщение по заголовку
@@ -33,20 +35,16 @@ class ApiException implements Exception {
 
   static const _networkCode = 'NETWORK_ERROR';
 
-  /// Сообщение на случай, когда до сервера не дошли вовсе.
-  static const _networkMessage =
-      'Нет связи с сервером. Проверьте подключение и попробуйте снова';
-
   factory ApiException.from(DioException error) {
     final response = error.response;
 
     // Ответа нет — до сервера не дошли. Показывать «ошибка 0» бессмысленно,
     // человеку нужно понять, что дело в связи, а не в его данных.
     if (response == null || _isConnectionProblem(error.type)) {
-      return const ApiException(
+      return ApiException(
         statusCode: 0,
         code: _networkCode,
-        message: _networkMessage,
+        message: FallbackTexts.network,
       );
     }
 
@@ -56,14 +54,14 @@ class ApiException implements Exception {
       return ApiException(
         statusCode: response.statusCode ?? 0,
         code: 'UNKNOWN',
-        message: 'Ошибка сервера (${response.statusCode})',
+        message: FallbackTexts.serverWithCode(response.statusCode ?? 0),
       );
     }
 
     return ApiException(
       statusCode: response.statusCode ?? 0,
       code: data['code'] as String? ?? 'UNKNOWN',
-      message: data['message'] as String? ?? 'Ошибка сервера',
+      message: data['message'] as String? ?? FallbackTexts.server,
       fieldErrors: _fieldErrors(data['details']),
       details: _details(data['details']),
     );

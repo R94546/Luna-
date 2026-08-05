@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../api/api_exception.dart';
 
 /// Экран ошибки.
@@ -30,7 +31,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              api?.message ?? 'Что-то пошло не так',
+              api?.message ?? L.of(context).errorSomethingWrong,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
@@ -39,7 +40,7 @@ class ErrorView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Повторить'),
+                label: Text(L.of(context).actionRetry),
               ),
             ],
           ],

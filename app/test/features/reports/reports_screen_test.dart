@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/reports/presentation/reports_screen.dart';
+
+import '../../support/localized_app.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -137,7 +139,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [dioProvider.overrideWithValue(dio)],
-        child: const MaterialApp(home: ReportsScreen()),
+        child: localizedApp(const ReportsScreen()),
       ),
     );
 

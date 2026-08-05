@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/api/dio_client.dart';
+import '../../../../core/l10n/locale_controller.dart';
 import '../../../../core/storage/token_store.dart';
 import '../../data/auth_api.dart';
 import '../../domain/session.dart';
@@ -26,7 +27,11 @@ Dio dio(Ref ref) {
     // Сессия протухла — сбрасываем состояние, роутер сам уведёт на вход.
     onSessionExpired: () async =>
         ref.read(sessionControllerProvider.notifier).forceLogout(),
-    locale: () => PlatformDispatcher.instance.locale,
+    // Язык запроса — тот, на котором человек читает экран, а не тот, что
+    // стоит в прошивке: иначе экран узбекский, а ошибка из-под него
+    // приходит по-русски. Читается на каждом запросе, чтобы переключение
+    // языка действовало сразу.
+    locale: () => resolveLocale(ref.read(localeControllerProvider)),
   );
 
   return client.dio;

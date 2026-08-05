@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luna_app/features/auth/presentation/providers/session_provider.dart';
 import 'package:luna_app/features/notifications/presentation/notifications_screen.dart';
+
+import '../../support/localized_app.dart';
 
 class _FakeAdapter implements HttpClientAdapter {
   /// Сколько уведомлений не прочитано. Меняется вызовами, как на сервере.
@@ -81,7 +82,7 @@ Future<_FakeAdapter> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(home: NotificationsScreen()),
+      child: localizedApp(const NotificationsScreen()),
     ),
   );
 
