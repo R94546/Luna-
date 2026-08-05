@@ -6,6 +6,7 @@ import '../../../core/format/money.dart';
 import '../../../core/widgets/async_value_builder.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/providers/session_provider.dart';
+import '../../costing/presentation/costing_screen.dart';
 import '../data/catalog_dto.dart';
 import 'providers/catalog_provider.dart';
 import 'widgets/employee_dialog.dart';
@@ -30,6 +31,18 @@ class CatalogScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Справочники'),
+          actions: [
+            // Калькулятор живёт здесь, а не отдельным разделом: он считает
+            // по расценкам и моделям из соседних вкладок, и материалы для
+            // него — такой же справочник.
+            IconButton(
+              icon: const Icon(Icons.calculate_outlined),
+              tooltip: 'Себестоимость',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const CostingScreen()),
+              ),
+            ),
+          ],
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
