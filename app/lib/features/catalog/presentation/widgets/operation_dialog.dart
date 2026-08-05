@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/catalog_dto.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Вид работы: раскрой, затяжка, пошив.
 ///
@@ -41,7 +42,7 @@ class _OperationDialogState extends ConsumerState<OperationDialog> {
     final name = _name.text.trim();
 
     if (name.length < 2) {
-      setState(() => _error = 'Укажите название операции');
+      setState(() => _error = L.of(context).operationNameRequired);
       return;
     }
 
@@ -82,8 +83,10 @@ class _OperationDialogState extends ConsumerState<OperationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: Text(widget.operation == null ? 'Новая операция' : 'Операция'),
+      title: Text(widget.operation == null ? l.operationNew : l.operationOne),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -93,22 +96,22 @@ class _OperationDialogState extends ConsumerState<OperationDialog> {
               controller: _name,
               enabled: !_busy,
               autofocus: widget.operation == null,
-              decoration: const InputDecoration(labelText: 'Название'),
+              decoration: InputDecoration(labelText: l.operationName),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _code,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Код'),
+              decoration: InputDecoration(labelText: l.operationCode),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _sortOrder,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Порядок',
-                helperText: 'В этом порядке операции видит рабочий в боте',
+              decoration: InputDecoration(
+                labelText: l.operationOrder,
+                helperText: l.operationOrderHint,
               ),
             ),
             if (_error != null) ...[
@@ -124,7 +127,7 @@ class _OperationDialogState extends ConsumerState<OperationDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -135,7 +138,7 @@ class _OperationDialogState extends ConsumerState<OperationDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Сохранить'),
+              : Text(l.actionSave),
         ),
       ],
     );

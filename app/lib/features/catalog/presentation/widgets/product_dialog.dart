@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/catalog_dto.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Карточка модели обуви.
 ///
@@ -58,7 +59,7 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
     final name = _name.text.trim();
 
     if (sku.isEmpty || name.length < 2) {
-      setState(() => _error = 'Укажите артикул и название');
+      setState(() => _error = L.of(context).productRequired);
       return;
     }
 
@@ -105,8 +106,10 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: Text(_isEdit ? 'Модель' : 'Новая модель'),
+      title: Text(_isEdit ? l.productOne : l.productNew),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -116,35 +119,35 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
               controller: _sku,
               enabled: !_busy,
               autofocus: !_isEdit,
-              decoration: const InputDecoration(labelText: 'Артикул'),
+              decoration: InputDecoration(labelText: l.productSku),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _name,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Название'),
+              decoration: InputDecoration(labelText: l.productName),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _category,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Категория'),
+              decoration: InputDecoration(labelText: l.productCategory),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _salePrice,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Цена продажи'),
+              decoration: InputDecoration(labelText: l.productSalePrice),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _costPrice,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Себестоимость',
-                helperText: 'Из неё считается прибыль по продаже',
+              decoration: InputDecoration(
+                labelText: l.productCostPrice,
+                helperText: l.productCostHint,
               ),
             ),
             const SizedBox(height: 12),
@@ -152,9 +155,9 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
               controller: _minStock,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Минимальный остаток',
-                helperText: 'Ниже него модель попадёт в «заканчивается»',
+              decoration: InputDecoration(
+                labelText: l.productMinStock,
+                helperText: l.productMinStockHint,
               ),
             ),
             if (!_isEdit) ...[
@@ -163,9 +166,7 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
                 controller: _initialStock,
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Остаток на складе сейчас',
-                ),
+                decoration: InputDecoration(labelText: l.productStockNow),
               ),
             ],
             if (_error != null) ...[
@@ -181,7 +182,7 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -192,7 +193,7 @@ class _ProductDialogState extends ConsumerState<ProductDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Сохранить'),
+              : Text(l.actionSave),
         ),
       ],
     );

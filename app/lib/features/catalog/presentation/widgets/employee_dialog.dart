@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/catalog_dto.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Карточка рабочего.
 ///
@@ -43,7 +44,7 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
     final fullName = _fullName.text.trim();
 
     if (fullName.length < 2) {
-      setState(() => _error = 'Укажите имя');
+      setState(() => _error = L.of(context).employeeNameRequired);
       return;
     }
 
@@ -85,10 +86,12 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final operations = ref.watch(catalogOperationsProvider);
 
     return AlertDialog(
-      title: Text(widget.employee == null ? 'Новый сотрудник' : 'Сотрудник'),
+      title: Text(widget.employee == null ? l.employeeNew : l.employeeOne),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -98,15 +101,15 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
               controller: _fullName,
               enabled: !_busy,
               autofocus: widget.employee == null,
-              decoration: const InputDecoration(labelText: 'Имя и фамилия'),
+              decoration: InputDecoration(labelText: l.employeeName),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _phone,
               enabled: !_busy,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Телефон',
+              decoration: InputDecoration(
+                labelText: l.employeePhone,
                 hintText: '+998 90 123 45 67',
               ),
             ),
@@ -114,18 +117,18 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
             TextField(
               controller: _position,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Должность'),
+              decoration: InputDecoration(labelText: l.employeePosition),
             ),
             const SizedBox(height: 12),
             operations.when(
               data: (list) => DropdownButtonFormField<String?>(
                 initialValue: _operationId,
-                decoration: const InputDecoration(
-                  labelText: 'Основная операция',
-                  helperText: 'Бот не будет спрашивать её при отчёте',
+                decoration: InputDecoration(
+                  labelText: l.employeeDefaultOperation,
+                  helperText: l.rateBotHint,
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Не задана')),
+                  DropdownMenuItem(value: null, child: Text(l.catalogNotSet)),
                   for (final operation in list)
                     DropdownMenuItem(
                       value: operation.id,
@@ -137,7 +140,7 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
                     : (value) => setState(() => _operationId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить операции'),
+              error: (_, _) => Text(l.errorLoadOperations),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -152,7 +155,7 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -163,7 +166,7 @@ class _EmployeeDialogState extends ConsumerState<EmployeeDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Сохранить'),
+              : Text(l.actionSave),
         ),
       ],
     );

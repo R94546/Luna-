@@ -4,7 +4,6 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/api/idempotency.dart';
 import '../../catalog/data/catalog_dto.dart';
 import 'sale_dto.dart';
-import '../../../l10n/app_localizations.dart';
 
 /// Позиция продажи в том виде, в каком её собирает экран.
 class SaleLine {

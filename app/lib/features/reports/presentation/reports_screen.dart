@@ -100,9 +100,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _format == ReportFormat.xlsx
-                ? l.reportsHintXlsx
-                : l.reportsHintPdf,
+            _format == ReportFormat.xlsx ? l.reportsHintXlsx : l.reportsHintPdf,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -199,7 +197,10 @@ class _Result extends StatelessWidget {
         ),
         title: Text(L.of(context).reportsReady),
         subtitle: Text(name),
-        trailing: TextButton(onPressed: onOpen, child: Text(L.of(context).actionOpen)),
+        trailing: TextButton(
+          onPressed: onOpen,
+          child: Text(L.of(context).actionOpen),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_exception.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Новая сдельная расценка.
 ///
@@ -41,7 +42,7 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
     final rate = _rate.text.trim().replaceAll(',', '.');
 
     if (operationId == null || rate.isEmpty) {
-      setState(() => _error = 'Укажите операцию и ставку');
+      setState(() => _error = L.of(context).rateRequired);
       return;
     }
 
@@ -72,12 +73,14 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final operations = ref.watch(catalogOperationsProvider);
     final products = ref.watch(catalogProductsProvider);
     final employees = ref.watch(catalogEmployeesProvider);
 
     return AlertDialog(
-      title: const Text('Расценка'),
+      title: Text(l.rateTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -86,7 +89,7 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
             operations.when(
               data: (list) => DropdownButtonFormField<String>(
                 initialValue: _operationId,
-                decoration: const InputDecoration(labelText: 'Операция'),
+                decoration: InputDecoration(labelText: l.rateOperation),
                 items: [
                   for (final operation in list)
                     DropdownMenuItem(
@@ -99,17 +102,17 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
                     : (value) => setState(() => _operationId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить операции'),
+              error: (_, _) => Text(l.errorLoadOperations),
             ),
             const SizedBox(height: 12),
             products.when(
               data: (list) => DropdownButtonFormField<String?>(
                 initialValue: _productId,
-                decoration: const InputDecoration(labelText: 'Модель'),
+                decoration: InputDecoration(labelText: l.rateProduct),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: null,
-                    child: Text('Все модели'),
+                    child: Text(l.catalogAllProducts),
                   ),
                   for (final product in list)
                     DropdownMenuItem(
@@ -122,18 +125,18 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
                     : (value) => setState(() => _productId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить модели'),
+              error: (_, _) => Text(l.errorLoadModels),
             ),
             const SizedBox(height: 12),
             employees.when(
               data: (list) => DropdownButtonFormField<String?>(
                 initialValue: _employeeId,
-                decoration: const InputDecoration(
-                  labelText: 'Сотрудник',
-                  helperText: 'Личная ставка перебивает общую',
+                decoration: InputDecoration(
+                  labelText: l.rateEmployee,
+                  helperText: l.ratePersonalHint,
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Все')),
+                  DropdownMenuItem(value: null, child: Text(l.workLogsAll)),
                   for (final employee in list)
                     DropdownMenuItem(
                       value: employee.id,
@@ -145,14 +148,14 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
                     : (value) => setState(() => _employeeId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить сотрудников'),
+              error: (_, _) => Text(l.errorLoadEmployees),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _rate,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Ставка за единицу'),
+              decoration: InputDecoration(labelText: l.rateValue),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -167,7 +170,7 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -178,7 +181,7 @@ class _PieceRateDialogState extends ConsumerState<PieceRateDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Добавить'),
+              : Text(l.actionAdd),
         ),
       ],
     );

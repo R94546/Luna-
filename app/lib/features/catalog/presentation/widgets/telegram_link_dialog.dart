@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/catalog_dto.dart';
 import '../providers/catalog_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Код привязки рабочего к Telegram.
 ///
@@ -33,10 +34,12 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: const Text('Подключить Telegram'),
+      title: Text(L.of(context).telegramLink),
       content: FutureBuilder<TelegramLinkDto>(
         future: _link,
         builder: (context, snapshot) {
@@ -50,7 +53,9 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
           final error = snapshot.error;
           if (error != null) {
             return Text(
-              error is ApiException ? error.message : 'Не удалось получить код',
+              error is ApiException
+                  ? error.message
+                  : L.of(context).telegramCodeFailed,
               style: TextStyle(color: theme.colorScheme.error),
             );
           }
@@ -72,15 +77,14 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Рабочий открывает бота и отправляет этот код. '
-                'Код действует до ${_time(link.expiresAt)}.',
+                L.of(context).telegramCodeHint(_time(link.expiresAt)),
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () => _copy(link.deepLink),
                 icon: const Icon(Icons.link),
-                label: const Text('Скопировать ссылку'),
+                label: Text(L.of(context).telegramCopyLink),
               ),
             ],
           );
@@ -89,7 +93,7 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Готово'),
+          child: Text(l.actionDone),
         ),
       ],
     );
@@ -101,7 +105,7 @@ class _TelegramLinkDialogState extends ConsumerState<TelegramLinkDialog> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Ссылка скопирована')));
+    ).showSnackBar(SnackBar(content: Text(L.of(context).telegramLinkCopied)));
   }
 
   static String _time(DateTime value) {

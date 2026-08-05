@@ -36,8 +36,7 @@ class CustomersScreen extends ConsumerWidget {
             return EmptyState(
               icon: Icons.storefront_outlined,
               title: l.customersEmptyTitle,
-              message:
-                  l.customersEmptyHint,
+              message: l.customersEmptyHint,
             );
           }
 
