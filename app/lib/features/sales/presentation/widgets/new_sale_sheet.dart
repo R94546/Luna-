@@ -11,6 +11,7 @@ import '../../../catalog/presentation/providers/catalog_provider.dart';
 import '../../data/sale_dto.dart';
 import '../../data/sales_api.dart';
 import '../providers/sales_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Оформление продажи.
 ///
@@ -35,6 +36,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final products = ref.watch(catalogProductsProvider);
     final accounts = ref.watch(cashAccountsProvider);
 
@@ -49,10 +51,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
         builder: (context, controller) => Column(
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Новая продажа',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(l.salesNew, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Expanded(
               child: products.when(
@@ -75,12 +74,12 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<PaymentMethod>(
                       initialValue: _method,
-                      decoration: const InputDecoration(labelText: 'Оплата'),
+                      decoration: InputDecoration(labelText: l.salesPayment),
                       items: [
                         for (final method in PaymentMethod.values)
                           DropdownMenuItem(
                             value: method,
-                            child: Text(method.label),
+                            child: Text(method.label(l)),
                           ),
                       ],
                       onChanged: _busy
@@ -94,8 +93,8 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
                       accounts.when(
                         data: (accountList) => DropdownButtonFormField<String>(
                           initialValue: _accountId ?? _pickDefault(accountList),
-                          decoration: const InputDecoration(
-                            labelText: 'В кассу',
+                          decoration: InputDecoration(
+                            labelText: l.ordersToCash,
                           ),
                           items: [
                             for (final account in accountList)
@@ -109,8 +108,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
                               : (value) => setState(() => _accountId = value),
                         ),
                         loading: () => const LinearProgressIndicator(),
-                        error: (_, _) =>
-                            const Text('Не удалось загрузить кассы'),
+                        error: (_, _) => Text(l.errorLoadCashAccounts),
                       ),
                     ],
                     if (_error != null) ...[
@@ -126,8 +124,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
                   ],
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, _) =>
-                    const Center(child: Text('Не удалось загрузить товары')),
+                error: (_, _) => Center(child: Text(l.errorLoadProducts)),
               ),
             ),
             _Footer(
@@ -159,7 +156,7 @@ class _NewSaleSheetState extends ConsumerState<NewSaleSheet> {
 
   Future<void> _submit(List<ProductDto> products) async {
     if (_method.needsCashAccount && _accountId == null) {
-      setState(() => _error = 'Выберите кассу');
+      setState(() => _error = L.of(context).salesSelectCash);
       return;
     }
 
@@ -248,7 +245,7 @@ class _ProductRow extends StatelessWidget {
                   Text(product.name),
                   Text(
                     '${Money.format(product.salePrice)} · '
-                    'остаток ${product.stockQuantity}',
+                    '${L.of(context).salesStockLeft(product.stockQuantity)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: product.stockQuantity == 0
                           ? theme.colorScheme.error
@@ -292,6 +289,8 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return Material(
       elevation: 8,
       child: Padding(
@@ -302,7 +301,10 @@ class _Footer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Итого', style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    L.of(context).salesTotal,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   Text(
                     Money.format(total),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -321,7 +323,7 @@ class _Footer extends StatelessWidget {
                       width: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Продать'),
+                  : Text(l.salesSell),
             ),
           ],
         ),

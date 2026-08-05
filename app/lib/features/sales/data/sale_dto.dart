@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'sale_dto.freezed.dart';
 part 'sale_dto.g.dart';
 
@@ -13,11 +15,11 @@ enum PaymentMethod {
   @JsonValue('DEBT')
   debt;
 
-  String get label => switch (this) {
-    PaymentMethod.cash => 'Наличные',
-    PaymentMethod.card => 'Карта',
-    PaymentMethod.transfer => 'Перевод',
-    PaymentMethod.debt => 'В долг',
+  String label(L l10n) => switch (this) {
+    PaymentMethod.cash => l10n.salesCash,
+    PaymentMethod.card => l10n.salesCard,
+    PaymentMethod.transfer => l10n.salesTransfer,
+    PaymentMethod.debt => l10n.salesCredit,
   };
 
   String get value => switch (this) {

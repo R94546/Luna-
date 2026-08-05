@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'order_dto.freezed.dart';
 part 'order_dto.g.dart';
 
@@ -20,12 +22,12 @@ enum OrderStatus {
   @JsonValue('CANCELLED')
   cancelled;
 
-  String get label => switch (this) {
-    OrderStatus.isNew => 'Новый',
-    OrderStatus.inProgress => 'В работе',
-    OrderStatus.ready => 'Готов',
-    OrderStatus.issued => 'Выдан',
-    OrderStatus.cancelled => 'Отменён',
+  String label(L l10n) => switch (this) {
+    OrderStatus.isNew => l10n.ordersStatusNew,
+    OrderStatus.inProgress => l10n.ordersStatusInProgress,
+    OrderStatus.ready => l10n.ordersStatusReady,
+    OrderStatus.issued => l10n.ordersStatusIssued,
+    OrderStatus.cancelled => l10n.ordersStatusCancelled,
   };
 
   String get value => switch (this) {

@@ -8,17 +8,20 @@ import '../../../core/widgets/empty_state.dart';
 import '../data/order_dto.dart';
 import 'order_detail_screen.dart';
 import 'providers/orders_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final orders = ref.watch(ordersProvider);
     final filter = ref.watch(ordersFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Заказы')),
+      appBar: AppBar(title: Text(l.ordersTitle)),
       body: Column(
         children: [
           _Filter(
@@ -35,10 +38,10 @@ class OrdersScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(ordersProvider),
               builder: (page) {
                 if (page.items.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.inbox_outlined,
-                    title: 'Заказов нет',
-                    message: 'По выбранному фильтру ничего не найдено',
+                    title: l.ordersEmptyTitle,
+                    message: l.ordersEmptyFiltered,
                   );
                 }
 
@@ -82,7 +85,7 @@ class _Filter extends StatelessWidget {
       child: Row(
         children: [
           ChoiceChip(
-            label: const Text('Все'),
+            label: Text(L.of(context).ordersAll),
             selected: status == null && !overdue,
             onSelected: (_) => onStatus(null),
           ),
@@ -90,7 +93,7 @@ class _Filter extends StatelessWidget {
           // Просроченные отдельной кнопкой: из-за них теряют клиентов,
           // и прятать их в общий список нельзя.
           ChoiceChip(
-            label: const Text('Просроченные'),
+            label: Text(L.of(context).ordersOverdue),
             selected: overdue,
             onSelected: (_) => onOverdue(),
           ),
@@ -103,7 +106,7 @@ class _Filter extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: ChoiceChip(
-                label: Text(value.label),
+                label: Text(value.label(L.of(context))),
                 selected: status == value && !overdue,
                 onSelected: (_) => onStatus(value),
               ),
@@ -140,7 +143,7 @@ class _OrderCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '№${order.orderNumber}',
+                    L.of(context).ordersNumber(order.orderNumber),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -166,12 +169,12 @@ class _OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                order.customer?.name ?? 'Без клиента',
+                order.customer?.name ?? L.of(context).ordersNoCustomer,
                 style: theme.textTheme.bodyMedium,
               ),
               if (order.dueDate != null)
                 Text(
-                  'Срок: ${order.dueDate}',
+                  L.of(context).ordersDue(order.dueDate ?? ''),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: order.isOverdue
                         ? AppTheme.negative
@@ -211,7 +214,7 @@ class _Progress extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Text(
-          '${progress.produced} из ${progress.ordered}',
+          L.of(context).ordersProgressOf(progress.produced, progress.ordered),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -245,7 +248,7 @@ class OrderStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.label,
+        status.label(L.of(context)),
         style: TextStyle(
           color: color,
           fontSize: 11,

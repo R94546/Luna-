@@ -202,6 +202,103 @@
   "cashRecord": "Yozish",
   "cashCategoryInvestment": "Kiritish",
   "cashCategoryWithdrawal": "Olib chiqish",
-  "cashCategoryOther": "Boshqa"
+  "cashCategoryOther": "Boshqa",
+  "ordersTitle": "Buyurtmalar",
+  "ordersEmptyTitle": "Buyurtmalar yo'q",
+  "ordersEmptyFiltered": "Tanlangan filtr bo'yicha hech narsa topilmadi",
+  "ordersNumber": "№{number}",
+  "@ordersNumber": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "ordersOrder": "Buyurtma",
+  "ordersOrderNumber": "Buyurtma №{number}",
+  "@ordersOrderNumber": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "ordersNoCustomer": "Mijozsiz",
+  "ordersDue": "Muddat: {date}",
+  "@ordersDue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "ordersOverdue": "Muddati o'tgan",
+  "ordersAll": "Barchasi",
+  "ordersStatusNew": "Yangi",
+  "ordersStatusInProgress": "Ishda",
+  "ordersStatusReady": "Tayyor",
+  "ordersStatusIssued": "Berilgan",
+  "ordersStatusCancelled": "Bekor qilingan",
+  "ordersItems": "Tarkib",
+  "ordersProgress": "Tayyorlik",
+  "ordersProduced": "Tayyorlandi",
+  "ordersMarkProduced": "Tayyorlanganini belgilash",
+  "ordersOrdered": "Buyurtma qilindi: {count} juft",
+  "@ordersOrdered": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ordersProducedOf": "{produced} / {total} juft · ",
+  "@ordersProducedOf": {
+    "placeholders": { "produced": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "ordersProgressOf": "{produced} / {ordered}",
+  "@ordersProgressOf": {
+    "placeholders": { "produced": { "type": "int" }, "ordered": { "type": "int" } }
+  },
+  "ordersAmount": "Buyurtma summasi",
+  "ordersPrepaid": "Oldindan to'lov",
+  "ordersDebt": "Qarz",
+  "ordersCancel": "Buyurtmani bekor qilish",
+  "ordersIssue": "Berish",
+  "ordersIssueTitle": "Buyurtma №{number} berilsinmi?",
+  "@ordersIssueTitle": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "ordersIssueHint": "Tovar ombordan chiqadi: {count} juft.",
+  "@ordersIssueHint": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ordersMakeSale": "Savdoni rasmiylashtirish",
+  "ordersMoneyToCash": "Pul kassaga tushadi",
+  "ordersToCash": "Kassaga",
+
+  "salesTitle": "Savdo",
+  "salesNew": "Yangi savdo",
+  "salesSell": "Sotish",
+  "salesEmptyTitle": "Savdolar yo'q",
+  "salesEmptyHint": "Birinchisini rasmiylashtiring — tovar ombordan chiqadi, pul kassaga tushadi",
+  "salesNumber": "№{number}",
+  "@salesNumber": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "salesRevenue": "Tushum",
+  "salesProfit": "Foyda",
+  "salesProfitAmount": "Foyda {amount}",
+  "@salesProfitAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "salesDebt": "Qarz",
+  "salesDebtAmount": "Qarz {amount}",
+  "@salesDebtAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "salesTotal": "Jami",
+  "salesPayment": "To'lov",
+  "salesCash": "Naqd",
+  "salesCard": "Karta",
+  "salesTransfer": "O'tkazma",
+  "salesCredit": "Qarzga",
+  "salesCancelled": "Storno",
+  "salesCancelTitle": "№{number} savdo storno qilinsinmi?",
+  "@salesCancelTitle": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "salesCancelHint": "Tovar omborga qaytadi, pul teskari o'tkazma bilan kassaga. Savdo tarixda belgi bilan qoladi.",
+  "salesCancelAction": "Storno qilish",
+  "salesReason": "Sabab",
+  "salesSelectCash": "Kassani tanlang",
+  "salesStockLeft": "qoldiq {count}",
+  "@salesStockLeft": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorLoadProducts": "Tovarlarni yuklab bo'lmadi"
 
 }
