@@ -10,32 +10,34 @@ import '../../auth/presentation/providers/session_provider.dart';
 import '../data/customer_dto.dart';
 import 'providers/customers_provider.dart';
 import 'widgets/customer_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 class CustomersScreen extends ConsumerWidget {
   const CustomersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final customers = ref.watch(customersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Клиенты')),
+      appBar: AppBar(title: Text(l.customersTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _edit(context, ref, null),
         icon: const Icon(Icons.person_add_alt),
-        label: const Text('Клиент'),
+        label: Text(l.customersOne),
       ),
       body: AsyncValueBuilder(
         value: customers,
         onRetry: () => ref.invalidate(customersProvider),
         builder: (list) {
           if (list.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.storefront_outlined,
-              title: 'Клиентов нет',
+              title: l.customersEmptyTitle,
               message:
-                  'Клиент нужен, чтобы продать в долг и видеть, '
-                  'кто сколько должен',
+                  l.customersEmptyHint,
             );
           }
 
@@ -126,22 +128,31 @@ class _CustomerSheet extends ConsumerWidget {
               ],
               const SizedBox(height: 20),
               _Row(
-                label: 'Долг',
+                label: L.of(context).customersDebt,
                 value: Money.format(data.debt),
                 // Красным — только когда должны на самом деле: ноль,
                 // выделенный тревожным цветом, читается как проблема.
                 accent: Money.parse(data.debt) > Decimal.zero,
               ),
-              _Row(label: 'Куплено на', value: Money.format(data.totalAmount)),
-              _Row(label: 'Продаж', value: '${data.salesCount}'),
-              _Row(label: 'Активных заказов', value: '${data.activeOrders}'),
+              _Row(
+                label: L.of(context).customersBought,
+                value: Money.format(data.totalAmount),
+              ),
+              _Row(
+                label: L.of(context).customersSalesCount,
+                value: '${data.salesCount}',
+              ),
+              _Row(
+                label: L.of(context).customersActiveOrders,
+                value: '${data.activeOrders}',
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _edit(context, ref),
-                      child: const Text('Изменить'),
+                      child: Text(L.of(context).actionEdit),
                     ),
                   ),
                   // Архивировать может только владелец: на клиента ссылаются
@@ -151,7 +162,7 @@ class _CustomerSheet extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _archive(context, ref),
-                        child: const Text('В архив'),
+                        child: Text(L.of(context).actionArchive),
                       ),
                     ),
                   ],

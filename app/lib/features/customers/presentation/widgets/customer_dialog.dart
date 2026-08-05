@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/customer_dto.dart';
 import '../providers/customers_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class CustomerDialog extends ConsumerStatefulWidget {
   const CustomerDialog({this.customer, super.key});
@@ -34,7 +35,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
     final name = _name.text.trim();
 
     if (name.length < 2) {
-      setState(() => _error = 'Укажите имя клиента');
+      setState(() => _error = L.of(context).customersNameRequired);
       return;
     }
 
@@ -74,8 +75,10 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
-      title: Text(widget.customer == null ? 'Новый клиент' : 'Клиент'),
+      title: Text(widget.customer == null ? l.customersNew : l.customersOne),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -85,21 +88,21 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
               controller: _name,
               enabled: !_busy,
               autofocus: widget.customer == null,
-              decoration: const InputDecoration(labelText: 'Имя или магазин'),
+              decoration: InputDecoration(labelText: l.customersName),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _phone,
               enabled: !_busy,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Телефон'),
+              decoration: InputDecoration(labelText: l.customersPhone),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _note,
               enabled: !_busy,
               maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Заметка'),
+              decoration: InputDecoration(labelText: l.customersNote),
             ),
             if (_error != null)
               Text(
@@ -112,7 +115,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -123,7 +126,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Сохранить'),
+              : Text(l.actionSave),
         ),
       ],
     );

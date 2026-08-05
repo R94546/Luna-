@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/report_dto.dart';
 import 'providers/reports_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Выгрузка отчётов.
 ///
@@ -23,15 +24,17 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final state = ref.watch(reportExportProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Отчёты')),
+      appBar: AppBar(title: Text(l.reportsTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          Text('Что выгрузить', style: theme.textTheme.titleSmall),
+          Text(l.reportsWhat, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Card(
             margin: EdgeInsets.zero,
@@ -51,8 +54,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       const Divider(height: 1),
                     RadioListTile<ReportType>(
                       value: type,
-                      title: Text(type.label),
-                      subtitle: Text(type.description),
+                      title: Text(type.label(l)),
+                      subtitle: Text(type.description(l)),
                     ),
                   ],
                 ],
@@ -60,14 +63,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Период', style: theme.textTheme.titleSmall),
+          Text(l.reportsPeriod, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
               for (final preset in _Preset.values)
                 ChoiceChip(
-                  label: Text(preset.label),
+                  label: Text(preset.label(L.of(context))),
                   selected: _period.preset == preset,
                   onSelected: state.isBusy
                       ? null
@@ -83,7 +86,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Формат', style: theme.textTheme.titleSmall),
+          Text(l.reportsFormat, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           SegmentedButton<ReportFormat>(
             segments: [
@@ -98,8 +101,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           const SizedBox(height: 8),
           Text(
             _format == ReportFormat.xlsx
-                ? 'Суммы числами — можно фильтровать и считать своё'
-                : 'Готов к печати: альбомный лист, таблицы с итогами',
+                ? l.reportsHintXlsx
+                : l.reportsHintPdf,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -115,9 +118,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   )
                 : const Icon(Icons.download_outlined),
             label: Text(switch (state.stage) {
-              ReportStage.building => 'Формируется…',
-              ReportStage.downloading => 'Скачивается…',
-              _ => 'Выгрузить',
+              ReportStage.building => l.reportsBuilding,
+              ReportStage.downloading => l.reportsDownloading,
+              _ => l.reportsExport,
             }),
           ),
           if (state.stage == ReportStage.ready) ...[
@@ -135,7 +138,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  state.error ?? 'Не удалось выгрузить отчёт',
+                  state.error ?? l.reportsFailed,
                   style: TextStyle(color: theme.colorScheme.onErrorContainer),
                 ),
               ),
@@ -166,7 +169,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   void _export() {
     ref
         .read(reportExportProvider.notifier)
-        .run(type: _type, format: _format, from: _period.from, to: _period.to);
+        .run(
+          l10n: L.of(context),
+          type: _type,
+          format: _format,
+          from: _period.from,
+          to: _period.to,
+        );
   }
 }
 
@@ -188,23 +197,26 @@ class _Result extends StatelessWidget {
           Icons.check_circle_outline,
           color: theme.colorScheme.primary,
         ),
-        title: const Text('Готово'),
+        title: Text(L.of(context).reportsReady),
         subtitle: Text(name),
-        trailing: TextButton(onPressed: onOpen, child: const Text('Открыть')),
+        trailing: TextButton(onPressed: onOpen, child: Text(L.of(context).actionOpen)),
       ),
     );
   }
 }
 
 enum _Preset {
-  thisMonth('Этот месяц'),
-  lastMonth('Прошлый месяц'),
-  quarter('90 дней'),
-  custom('Свой период');
+  thisMonth,
+  lastMonth,
+  quarter,
+  custom;
 
-  const _Preset(this.label);
-
-  final String label;
+  String label(L l10n) => switch (this) {
+    _Preset.thisMonth => l10n.reportsThisMonth,
+    _Preset.lastMonth => l10n.reportsLastMonth,
+    _Preset.quarter => l10n.reportsQuarter,
+    _Preset.custom => l10n.reportsCustom,
+  };
 }
 
 /// Границы периода. Даты включительные — так же, как на бэкенде.
