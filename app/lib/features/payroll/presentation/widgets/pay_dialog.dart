@@ -8,6 +8,7 @@ import '../../../cash/data/cash_dto.dart';
 import '../../../cash/presentation/providers/cash_provider.dart';
 import '../../data/payroll_dto.dart';
 import '../providers/payroll_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Выплата сотруднику.
 ///
@@ -53,7 +54,7 @@ class _PayDialogState extends ConsumerState<PayDialog> {
     final amount = _amount.text.trim();
 
     if (accountId == null || amount.isEmpty) {
-      setState(() => _error = 'Укажите сумму и кассу');
+      setState(() => _error = L.of(context).errorAmountAndCash);
       return;
     }
 
@@ -93,10 +94,12 @@ class _PayDialogState extends ConsumerState<PayDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final accounts = ref.watch(cashAccountsProvider);
 
     return AlertDialog(
-      title: Text('Выплата · ${widget.entry.employee.fullName}'),
+      title: Text(l.payrollPayTitle(widget.entry.employee.fullName)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -105,7 +108,7 @@ class _PayDialogState extends ConsumerState<PayDialog> {
             SegmentedButton<SalaryPaymentType>(
               segments: [
                 for (final type in SalaryPaymentType.values)
-                  ButtonSegment(value: type, label: Text(type.label)),
+                  ButtonSegment(value: type, label: Text(type.label(l))),
               ],
               selected: {_type},
               showSelectedIcon: false,
@@ -117,13 +120,13 @@ class _PayDialogState extends ConsumerState<PayDialog> {
               controller: _amount,
               keyboardType: TextInputType.number,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Сумма'),
+              decoration: InputDecoration(labelText: l.fieldAmount),
             ),
             const SizedBox(height: 12),
             accounts.when(
               data: (list) => DropdownButtonFormField<String>(
                 initialValue: _accountId ?? _defaultAccount(list),
-                decoration: const InputDecoration(labelText: 'Из кассы'),
+                decoration: InputDecoration(labelText: l.fieldFromCash),
                 items: [
                   for (final account in list)
                     DropdownMenuItem(
@@ -138,14 +141,14 @@ class _PayDialogState extends ConsumerState<PayDialog> {
                     : (value) => setState(() => _accountId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить кассы'),
+              error: (_, _) => Text(l.errorLoadCashAccounts),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _note,
               enabled: !_busy,
               maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Комментарий'),
+              decoration: InputDecoration(labelText: l.fieldComment),
             ),
             if (_error != null)
               Text(
@@ -158,7 +161,7 @@ class _PayDialogState extends ConsumerState<PayDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -169,7 +172,7 @@ class _PayDialogState extends ConsumerState<PayDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Выплатить'),
+              : Text(l.payrollPay),
         ),
       ],
     );

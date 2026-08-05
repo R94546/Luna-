@@ -8,6 +8,8 @@ import 'package:luna_app/features/auth/presentation/providers/session_provider.d
 import 'package:luna_app/features/payroll/data/payroll_dto.dart';
 import 'package:luna_app/features/payroll/presentation/widgets/pay_dialog.dart';
 
+import '../../support/localized_app.dart';
+
 /// Сервер, который запоминает заголовки каждой выплаты.
 class _FakeAdapter implements HttpClientAdapter {
   final List<String?> paymentKeys = [];
@@ -82,8 +84,8 @@ Future<_FakeAdapter> _pump(WidgetTester tester, {int failFirst = 0}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [dioProvider.overrideWithValue(dio)],
-      child: const MaterialApp(
-        home: Scaffold(
+      child: localizedApp(
+        const Scaffold(
           body: PayDialog(entry: _entry, periodId: 'period-1'),
         ),
       ),

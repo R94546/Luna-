@@ -8,6 +8,7 @@ import '../data/cash_dto.dart';
 import 'providers/cash_provider.dart';
 import 'widgets/expense_dialog.dart';
 import 'widgets/manual_transaction_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 enum _Tab { summary, journal, expenses }
 
@@ -23,24 +24,37 @@ class _CashScreenState extends ConsumerState<CashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Деньги')),
+      appBar: AppBar(title: Text(l.cashTitle)),
       floatingActionButton: _tab == _Tab.summary
           ? null
           : FloatingActionButton.extended(
               onPressed: () => _add(context),
               icon: const Icon(Icons.add),
-              label: Text(_tab == _Tab.expenses ? 'Расход' : 'Операция'),
+              label: Text(
+                _tab == _Tab.expenses ? l.cashExpense : l.cashOperationShort,
+              ),
             ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: SegmentedButton<_Tab>(
-              segments: const [
-                ButtonSegment(value: _Tab.summary, label: Text('Сводка')),
-                ButtonSegment(value: _Tab.journal, label: Text('Журнал')),
-                ButtonSegment(value: _Tab.expenses, label: Text('Расходы')),
+              segments: [
+                ButtonSegment(
+                  value: _Tab.summary,
+                  label: Text(l.cashTabSummary),
+                ),
+                ButtonSegment(
+                  value: _Tab.journal,
+                  label: Text(l.cashTabJournal),
+                ),
+                ButtonSegment(
+                  value: _Tab.expenses,
+                  label: Text(l.cashTabExpenses),
+                ),
               ],
               selected: {_tab},
               showSelectedIcon: false,
@@ -76,6 +90,8 @@ class _SummaryView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final summary = ref.watch(cashSummaryProvider);
     final theme = Theme.of(context);
 
@@ -109,22 +125,22 @@ class _SummaryView extends ConsumerWidget {
                 child: Column(
                   children: [
                     _Line(
-                      label: 'Остаток на начало',
+                      label: l.cashOpeningBalance,
                       value: data.openingBalance,
                     ),
                     _Line(
-                      label: 'Приход',
+                      label: l.cashIncome,
                       value: data.income.total,
                       color: AppTheme.positive,
                     ),
                     _Line(
-                      label: 'Расход',
+                      label: l.cashOutcome,
                       value: data.outcome.total,
                       color: AppTheme.negative,
                     ),
                     const Divider(height: 24),
                     _Line(
-                      label: 'Остаток на конец',
+                      label: l.cashClosingBalance,
                       value: data.closingBalance,
                       bold: true,
                     ),
@@ -134,7 +150,7 @@ class _SummaryView extends ConsumerWidget {
             ),
             if (data.outcome.byCategory.isNotEmpty) ...[
               const SizedBox(height: 20),
-              Text('Куда ушли деньги', style: theme.textTheme.titleMedium),
+              Text(l.cashWhereMoneyWent, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               Card(
                 child: Column(
@@ -237,7 +253,7 @@ class _ExpensesView extends ConsumerWidget {
           children: [
             Card(
               child: ListTile(
-                title: const Text('Всего за период'),
+                title: Text(L.of(context).cashPeriodTotal),
                 trailing: Text(
                   Money.format(data.summary.totalAmount),
                   style: const TextStyle(fontWeight: FontWeight.w700),

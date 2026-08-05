@@ -6,6 +6,7 @@ import '../../../../core/api/idempotency.dart';
 import '../../../../core/format/money.dart';
 import '../../data/cash_dto.dart';
 import '../providers/cash_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Ручная операция по кассе: внесение или изъятие владельцем.
 ///
@@ -43,7 +44,7 @@ class _ManualTransactionDialogState
     final amount = _amount.text.trim();
 
     if (accountId == null || amount.isEmpty) {
-      setState(() => _error = 'Укажите сумму и кассу');
+      setState(() => _error = L.of(context).errorAmountAndCash);
       return;
     }
 
@@ -81,10 +82,12 @@ class _ManualTransactionDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final accounts = ref.watch(cashAccountsProvider);
 
     return AlertDialog(
-      title: const Text('Операция по кассе'),
+      title: Text(l.cashOperation),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -93,7 +96,10 @@ class _ManualTransactionDialogState
             SegmentedButton<ManualCategory>(
               segments: [
                 for (final category in ManualCategory.values)
-                  ButtonSegment(value: category, label: Text(category.label)),
+                  ButtonSegment(
+                    value: category,
+                    label: Text(category.label(l)),
+                  ),
               ],
               selected: {_category},
               showSelectedIcon: false,
@@ -105,13 +111,13 @@ class _ManualTransactionDialogState
               controller: _amount,
               keyboardType: TextInputType.number,
               enabled: !_busy,
-              decoration: const InputDecoration(labelText: 'Сумма'),
+              decoration: InputDecoration(labelText: l.fieldAmount),
             ),
             const SizedBox(height: 12),
             accounts.when(
               data: (list) => DropdownButtonFormField<String>(
                 initialValue: _accountId ?? _pickDefault(list),
-                decoration: const InputDecoration(labelText: 'Касса'),
+                decoration: InputDecoration(labelText: l.fieldCashAccount),
                 items: [
                   for (final account in list)
                     DropdownMenuItem(
@@ -126,14 +132,14 @@ class _ManualTransactionDialogState
                     : (value) => setState(() => _accountId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить кассы'),
+              error: (_, _) => Text(l.errorLoadCashAccounts),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _note,
               enabled: !_busy,
               maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Комментарий'),
+              decoration: InputDecoration(labelText: l.fieldComment),
             ),
             if (_error != null)
               Text(
@@ -146,7 +152,7 @@ class _ManualTransactionDialogState
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -157,7 +163,7 @@ class _ManualTransactionDialogState
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Записать'),
+              : Text(l.cashRecord),
         ),
       ],
     );

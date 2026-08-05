@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'payroll_dto.freezed.dart';
 part 'payroll_dto.g.dart';
 
@@ -11,10 +13,10 @@ enum PayrollPeriodStatus {
   @JsonValue('PAID')
   paid;
 
-  String get label => switch (this) {
-    PayrollPeriodStatus.open => 'Открыт',
-    PayrollPeriodStatus.closed => 'Закрыт',
-    PayrollPeriodStatus.paid => 'Выплачен',
+  String label(L l10n) => switch (this) {
+    PayrollPeriodStatus.open => l10n.payrollStatusOpen,
+    PayrollPeriodStatus.closed => l10n.payrollStatusClosed,
+    PayrollPeriodStatus.paid => l10n.payrollStatusPaid,
   };
 
   /// Пока период открыт, его можно пересчитывать и править.
@@ -29,10 +31,10 @@ enum SalaryPaymentType {
   @JsonValue('BONUS')
   bonus;
 
-  String get label => switch (this) {
-    SalaryPaymentType.advance => 'Аванс',
-    SalaryPaymentType.salary => 'Зарплата',
-    SalaryPaymentType.bonus => 'Премия',
+  String label(L l10n) => switch (this) {
+    SalaryPaymentType.advance => l10n.payrollTypeAdvance,
+    SalaryPaymentType.salary => l10n.payrollTypeSalary,
+    SalaryPaymentType.bonus => l10n.payrollTypeBonus,
   };
 
   String get value => switch (this) {

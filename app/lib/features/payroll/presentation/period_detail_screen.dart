@@ -9,6 +9,7 @@ import '../data/payroll_dto.dart';
 import 'providers/payroll_provider.dart';
 import 'widgets/entry_tile.dart';
 import 'widgets/pay_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Ведомость периода.
 class PeriodDetailScreen extends ConsumerWidget {
@@ -18,26 +19,28 @@ class PeriodDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final period = ref.watch(periodControllerProvider(periodId));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ведомость'),
+        title: Text(l.payrollSheet),
         actions: [
           if (period.valueOrNull?.status.isEditable ?? false) ...[
             IconButton(
-              tooltip: 'Пересчитать',
+              tooltip: l.payrollRecalculate,
               icon: const Icon(Icons.refresh_rounded),
               onPressed: () => _run(
                 context,
                 () => ref
                     .read(periodControllerProvider(periodId).notifier)
                     .calculate(),
-                success: 'Пересчитано',
+                success: l.payrollRecalculated,
               ),
             ),
             IconButton(
-              tooltip: 'Закрыть период',
+              tooltip: l.payrollClosePeriod,
               icon: const Icon(Icons.lock_outline_rounded),
               onPressed: () => _confirmClose(context, ref),
             ),
@@ -57,11 +60,9 @@ class PeriodDetailScreen extends ConsumerWidget {
               _Header(period: data),
               const SizedBox(height: 16),
               if (data.entries.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text('За период нет подтверждённой выработки'),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: Text(L.of(context).payrollNoApproved)),
                 )
               else
                 for (final entry in data.entries)
@@ -103,20 +104,17 @@ class PeriodDetailScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Закрыть период?'),
-        content: const Text(
-          'После закрытия выработка попадёт в этот период окончательно, '
-          'а начисления больше нельзя будет править.',
-        ),
+        title: Text(L.of(dialogContext).payrollClosePeriodQuestion),
+        content: Text(L.of(dialogContext).payrollClosePeriodHint),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: Text(L.of(dialogContext).actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-            child: const Text('Закрыть'),
+            child: Text(L.of(dialogContext).actionClose),
           ),
         ],
       ),
@@ -127,7 +125,7 @@ class PeriodDetailScreen extends ConsumerWidget {
     await _run(
       context,
       () => ref.read(periodControllerProvider(periodId).notifier).close(),
-      success: 'Период закрыт',
+      success: L.of(context).payrollClosed,
     );
   }
 
@@ -181,6 +179,8 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final theme = Theme.of(context);
 
     final toPay = period.entries.fold<double>(
@@ -203,13 +203,13 @@ class _Header extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Figure(
-                    label: 'Начислено',
+                    label: l.payrollAccrued,
                     value: Money.format(period.totalAmount),
                   ),
                 ),
                 Expanded(
                   child: _Figure(
-                    label: 'К выплате',
+                    label: l.payrollToPay,
                     value: Money.format(toPay.toStringAsFixed(0)),
                   ),
                 ),
@@ -284,6 +284,8 @@ class _EditEntryDialogState extends State<_EditEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return AlertDialog(
       title: Text(widget.entry.employee.fullName),
       content: Column(
@@ -292,20 +294,20 @@ class _EditEntryDialogState extends State<_EditEntryDialog> {
           TextField(
             controller: _bonus,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Премия'),
+            decoration: InputDecoration(labelText: l.payrollBonus),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _deduction,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Удержание'),
+            decoration: InputDecoration(labelText: l.payrollDeduction),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(L.of(context).actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop((
@@ -315,7 +317,7 @@ class _EditEntryDialogState extends State<_EditEntryDialog> {
                 : _deduction.text.trim(),
           )),
           style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-          child: const Text('Сохранить'),
+          child: Text(l.actionSave),
         ),
       ],
     );

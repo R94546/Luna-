@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'cash_dto.freezed.dart';
 part 'cash_dto.g.dart';
 
@@ -33,15 +35,20 @@ enum CashDirection {
 /// который заводит первичный документ вместе с движением. Разреши их —
 /// и в кассе появится зарплата, которой не соответствует ни одна выплата.
 enum ManualCategory {
-  investment('INVESTMENT', 'Внесение', CashDirection.income),
-  withdrawal('WITHDRAWAL', 'Изъятие', CashDirection.outcome),
-  other('OTHER', 'Прочее', CashDirection.outcome);
+  investment('INVESTMENT', CashDirection.income),
+  withdrawal('WITHDRAWAL', CashDirection.outcome),
+  other('OTHER', CashDirection.outcome);
 
-  const ManualCategory(this.value, this.label, this.direction);
+  const ManualCategory(this.value, this.direction);
 
   final String value;
-  final String label;
   final CashDirection direction;
+
+  String label(L l10n) => switch (this) {
+    ManualCategory.investment => l10n.cashCategoryInvestment,
+    ManualCategory.withdrawal => l10n.cashCategoryWithdrawal,
+    ManualCategory.other => l10n.cashCategoryOther,
+  };
 }
 
 @freezed

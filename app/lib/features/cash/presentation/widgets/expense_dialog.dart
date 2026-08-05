@@ -6,6 +6,7 @@ import '../../../../core/api/idempotency.dart';
 import '../../../../core/format/money.dart';
 import '../../data/cash_dto.dart';
 import '../providers/cash_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Новый расход.
 ///
@@ -42,7 +43,7 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
     final amount = _amount.text.trim();
 
     if (categoryId == null || accountId == null || amount.isEmpty) {
-      setState(() => _error = 'Заполните сумму, категорию и кассу');
+      setState(() => _error = L.of(context).errorExpenseFields);
       return;
     }
 
@@ -80,11 +81,13 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final categories = ref.watch(expenseCategoriesProvider);
     final accounts = ref.watch(cashAccountsProvider);
 
     return AlertDialog(
-      title: const Text('Расход'),
+      title: Text(l.cashExpense),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -95,13 +98,13 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
               keyboardType: TextInputType.number,
               enabled: !_busy,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Сумма'),
+              decoration: InputDecoration(labelText: l.fieldAmount),
             ),
             const SizedBox(height: 12),
             categories.when(
               data: (list) => DropdownButtonFormField<String>(
                 initialValue: _categoryId,
-                decoration: const InputDecoration(labelText: 'Категория'),
+                decoration: InputDecoration(labelText: l.fieldCategory),
                 items: [
                   for (final category in list)
                     DropdownMenuItem(
@@ -114,13 +117,13 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
                     : (value) => setState(() => _categoryId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить категории'),
+              error: (_, _) => Text(l.errorLoadCategories),
             ),
             const SizedBox(height: 12),
             accounts.when(
               data: (list) => DropdownButtonFormField<String>(
                 initialValue: _accountId ?? _pickDefault(list),
-                decoration: const InputDecoration(labelText: 'Из кассы'),
+                decoration: InputDecoration(labelText: l.fieldFromCash),
                 items: [
                   for (final account in list)
                     DropdownMenuItem(
@@ -135,14 +138,14 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
                     : (value) => setState(() => _accountId = value),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, _) => const Text('Не удалось загрузить кассы'),
+              error: (_, _) => Text(l.errorLoadCashAccounts),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _note,
               enabled: !_busy,
               maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Комментарий'),
+              decoration: InputDecoration(labelText: l.fieldComment),
             ),
             if (_error != null)
               Text(
@@ -155,7 +158,7 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,
@@ -166,7 +169,7 @@ class _ExpenseDialogState extends ConsumerState<ExpenseDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Записать'),
+              : Text(l.cashRecord),
         ),
       ],
     );

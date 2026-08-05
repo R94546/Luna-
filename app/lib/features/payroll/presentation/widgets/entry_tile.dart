@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/format/money.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/payroll_dto.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Строка ведомости.
 ///
@@ -25,6 +26,8 @@ class EntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     final theme = Theme.of(context);
     final negative = (double.tryParse(entry.toPay) ?? 0) < 0;
 
@@ -54,25 +57,25 @@ class EntryTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            _Row(label: 'Выработка', value: entry.workAmount),
+            _Row(label: l.payrollWork, value: entry.workAmount),
             if (entry.bonus != '0' && Money.parse(entry.bonus).sign != 0)
               _Row(
-                label: 'Премия',
+                label: l.payrollBonus,
                 value: entry.bonus,
                 color: AppTheme.positive,
               ),
             if (Money.parse(entry.deduction).sign != 0)
               _Row(
-                label: 'Удержание',
+                label: l.payrollDeduction,
                 value: entry.deduction,
                 color: AppTheme.negative,
               ),
             if (Money.parse(entry.advancePaid).sign != 0)
-              _Row(label: 'Выдан аванс', value: entry.advancePaid),
+              _Row(label: l.payrollAdvanceGiven, value: entry.advancePaid),
             const Divider(height: 20),
             Row(
               children: [
-                Text('К выплате', style: theme.textTheme.bodyMedium),
+                Text(l.payrollToPay, style: theme.textTheme.bodyMedium),
                 const Spacer(),
                 Text(
                   Money.format(entry.toPay),
@@ -91,10 +94,10 @@ class EntryTile extends StatelessWidget {
                 if (editable && onEdit != null)
                   TextButton(
                     onPressed: onEdit,
-                    child: const Text('Премия / удержание'),
+                    child: Text(l.payrollBonusOrDeduction),
                   ),
                 if (onPay != null)
-                  TextButton(onPressed: onPay, child: const Text('Выплатить')),
+                  TextButton(onPressed: onPay, child: Text(l.payrollPay)),
               ],
             ),
           ],

@@ -8,32 +8,33 @@ import '../../../core/widgets/empty_state.dart';
 import '../data/payroll_dto.dart';
 import 'period_detail_screen.dart';
 import 'providers/payroll_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class PayrollScreen extends ConsumerWidget {
   const PayrollScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+
     final periods = ref.watch(payrollPeriodsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Зарплата')),
+      appBar: AppBar(title: Text(l.payrollTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openPeriod(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Открыть период'),
+        label: Text(l.payrollOpenPeriod),
       ),
       body: AsyncValueBuilder(
         value: periods,
         onRetry: () => ref.invalidate(payrollPeriodsProvider),
         builder: (items) {
           if (items.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.event_note_outlined,
-              title: 'Периодов нет',
-              message:
-                  'Откройте период — начисления соберутся из подтверждённой '
-                  'выработки автоматически',
+              title: l.payrollEmptyTitle,
+              message: l.payrollEmptyHint,
             );
           }
 
@@ -63,7 +64,7 @@ class PayrollScreen extends ConsumerWidget {
         start: DateTime(now.year, now.month),
         end: DateTime(now.year, now.month + 1, 0),
       ),
-      helpText: 'Период начисления',
+      helpText: L.of(context).payrollPeriodHelp,
     );
 
     if (range == null || !context.mounted) return;
@@ -117,7 +118,7 @@ class _PeriodCard extends StatelessWidget {
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text('${period.employeeCount} сотрудников'),
+          child: Text(L.of(context).payrollEmployees(period.employeeCount)),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -171,7 +172,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.label,
+        status.label(L.of(context)),
         style: TextStyle(
           color: color,
           fontSize: 11,
