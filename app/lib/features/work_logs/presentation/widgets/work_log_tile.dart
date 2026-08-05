@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/format/money.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/work_log_dto.dart';
 
 /// Строка выработки.
@@ -30,6 +31,7 @@ class WorkLogTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final theme = Theme.of(context);
     final pending = log.status == WorkLogStatus.pending;
 
@@ -125,7 +127,7 @@ class WorkLogTile extends StatelessWidget {
                   if (pending && !selectable && onApprove != null) ...[
                     TextButton(
                       onPressed: onReject,
-                      child: const Text('Отклонить'),
+                      child: Text(l.workLogsReject),
                     ),
                     FilledButton(
                       onPressed: onApprove,
@@ -133,7 +135,7 @@ class WorkLogTile extends StatelessWidget {
                         minimumSize: const Size(0, 36),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                       ),
-                      child: const Text('Принять'),
+                      child: Text(l.workLogsApprove),
                     ),
                   ],
                 ],
@@ -142,7 +144,7 @@ class WorkLogTile extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    'Причина: ${log.rejectReason}',
+                    l.workLogsRejectedReason(log.rejectReason ?? ''),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.negative,
                     ),
@@ -182,7 +184,7 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.label,
+        status.label(L.of(context)),
         style: TextStyle(
           color: color,
           fontSize: 11,

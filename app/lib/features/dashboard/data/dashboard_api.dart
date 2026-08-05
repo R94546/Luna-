@@ -1,19 +1,26 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import 'dashboard_dto.dart';
 
 /// Периоды, которыми мыслит владелец. Совпадают с enum'ом на бэкенде.
 enum DashboardPeriod {
-  week('week', 'Неделя'),
-  month('month', 'Месяц'),
-  quarter('quarter', 'Квартал'),
-  year('year', 'Год');
+  week('week'),
+  month('month'),
+  quarter('quarter'),
+  year('year');
 
-  const DashboardPeriod(this.value, this.label);
+  const DashboardPeriod(this.value);
 
   final String value;
-  final String label;
+
+  String label(L l10n) => switch (this) {
+    DashboardPeriod.week => l10n.periodWeek,
+    DashboardPeriod.month => l10n.periodMonth,
+    DashboardPeriod.quarter => l10n.periodQuarter,
+    DashboardPeriod.year => l10n.periodYear,
+  };
 }
 
 class DashboardApi {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format/money.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/widgets/async_value_builder.dart';
 import '../../auth/presentation/providers/session_provider.dart';
 import '../data/dashboard_api.dart';
@@ -24,6 +25,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionControllerProvider).value;
+    final l = L.of(context);
     final data = ref.watch(dashboardProvider(_period));
 
     return Scaffold(
@@ -43,7 +45,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Выйти',
+            tooltip: l.settingsLogout,
             icon: const Icon(Icons.logout_rounded),
             onPressed: () =>
                 ref.read(sessionControllerProvider.notifier).logout(),
@@ -86,7 +88,10 @@ class _PeriodSelector extends StatelessWidget {
       child: SegmentedButton<DashboardPeriod>(
         segments: [
           for (final period in DashboardPeriod.values)
-            ButtonSegment(value: period, label: Text(period.label)),
+            ButtonSegment(
+              value: period,
+              label: Text(period.label(L.of(context))),
+            ),
         ],
         selected: {value},
         showSelectedIcon: false,
@@ -103,6 +108,8 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
+
     return ListView(
       // Всегда прокручиваемый: иначе pull-to-refresh не сработает
       // на коротком экране, где содержимое влезло целиком.
@@ -128,11 +135,11 @@ class _Content extends StatelessWidget {
             mainAxisSpacing: 12,
           ),
           children: [
-            MetricCard(title: 'Выручка', metric: dashboard.revenue),
-            MetricCard(title: 'Валовая прибыль', metric: dashboard.grossProfit),
-            MetricCard(title: 'Чистая прибыль', metric: dashboard.netProfit),
+            MetricCard(title: l.dashRevenue, metric: dashboard.revenue),
+            MetricCard(title: l.dashGrossProfit, metric: dashboard.grossProfit),
+            MetricCard(title: l.dashNetProfit, metric: dashboard.netProfit),
             MetricCard(
-              title: 'Расходы',
+              title: l.dashExpenses,
               metric: dashboard.expenses,
               higherIsBetter: false,
             ),
@@ -142,7 +149,7 @@ class _Content extends StatelessWidget {
         SizedBox(
           height: 118,
           child: MetricCard(
-            title: 'Выплачено зарплаты',
+            title: l.dashSalaryPaid,
             metric: dashboard.salaries,
             higherIsBetter: false,
           ),
@@ -152,12 +159,12 @@ class _Content extends StatelessWidget {
         const SizedBox(height: 16),
         _MoneyRow(
           left: _Tile(
-            title: 'В кассе',
+            title: l.dashCash,
             value: Money.format(dashboard.cashBalance),
             icon: Icons.account_balance_wallet_outlined,
           ),
           right: _Tile(
-            title: 'Долг по зарплате',
+            title: l.dashSalaryDebt,
             value: Money.format(dashboard.salaryDebt),
             icon: Icons.payments_outlined,
           ),
@@ -165,19 +172,22 @@ class _Content extends StatelessWidget {
         const SizedBox(height: 12),
         _MoneyRow(
           left: _Tile(
-            title: 'Выпущено',
-            value: '${dashboard.unitsProduced} пар',
+            title: l.dashProduced,
+            value: l.pairs(dashboard.unitsProduced),
             icon: Icons.precision_manufacturing_outlined,
           ),
           right: _Tile(
-            title: 'Продано',
-            value: '${dashboard.unitsSold} пар',
+            title: l.dashSold,
+            value: l.pairs(dashboard.unitsSold),
             icon: Icons.local_shipping_outlined,
           ),
         ),
         if (dashboard.topProducts.isNotEmpty) ...[
           const SizedBox(height: 24),
-          Text('Топ моделей', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l.dashTopProducts,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 12),
           Card(
             child: Column(
@@ -263,7 +273,7 @@ class _TopProductTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(product.name),
-      subtitle: Text('${product.unitsSold} пар'),
+      subtitle: Text(L.of(context).pairs(product.unitsSold)),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -273,7 +283,7 @@ class _TopProductTile extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           Text(
-            'прибыль ${Money.compact(product.profit)}',
+            L.of(context).dashProfitShort(Money.compact(product.profit)),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.outline,
             ),

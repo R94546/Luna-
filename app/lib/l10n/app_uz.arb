@@ -80,5 +80,65 @@
   "notificationsTitle": "Bildirishnomalar",
   "notificationsMarkAll": "Barchasini o'qildi",
   "notificationsEmptyTitle": "Hozircha jim",
-  "notificationsEmptyHint": "Bu yerda tugayotgan tovar va muddati o'tgan buyurtmalar ko'rinadi"
+  "notificationsEmptyHint": "Bu yerda tugayotgan tovar va muddati o'tgan buyurtmalar ko'rinadi",
+  "pairs": "{count} juft",
+  "@pairs": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "periodWeek": "Hafta",
+  "periodMonth": "Oy",
+  "periodQuarter": "Chorak",
+  "periodYear": "Yil",
+
+  "dashRevenue": "Tushum",
+  "dashGrossProfit": "Yalpi foyda",
+  "dashNetProfit": "Sof foyda",
+  "dashExpenses": "Xarajatlar",
+  "dashSalaryPaid": "To'langan oylik",
+  "dashCash": "Kassada",
+  "dashSalaryDebt": "Oylik qarzi",
+  "dashProduced": "Ishlab chiqarildi",
+  "dashSold": "Sotildi",
+  "dashTopProducts": "Ko'p sotilgan modellar",
+  "dashNoSales": "Bu davrda savdo bo'lmagan",
+  "dashProfitShort": "foyda {amount}",
+  "@dashProfitShort": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "dashAlertWorkLogs": "Ish qaydlari tasdiq kutmoqda",
+  "dashAlertLowStock": "Modellar tugayapti",
+  "dashAlertOrdersOverdue": "Buyurtmalar muddati o'tgan",
+
+  "workLogsTitle": "Ish qaydi",
+  "workLogsAll": "Barchasi",
+  "workLogsPending": "Kutilmoqda",
+  "workLogsApproved": "Qabul qilingan",
+  "workLogsRejected": "Rad etilgan",
+  "workLogsEmptyTitle": "Yozuvlar yo'q",
+  "workLogsEmptyHint": "Ishchilar Telegram-bot orqali hisobot beradi — qaydlar shu yerda ko'rinadi",
+  "workLogsTotal": "Filtr bo'yicha jami",
+  "workLogsSelected": "Tanlandi: {count}",
+  "@workLogsSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "workLogsApprove": "Qabul qilish",
+  "workLogsApproveAll": "Barchasini qabul qilish",
+  "workLogsReject": "Rad etish",
+  "workLogsRejectTitle": "Yozuvni rad etish",
+  "workLogsRejectReason": "Sabab",
+  "workLogsRejectHint": "Masalan: ikki marta hisoblangan",
+  "workLogsApprovedCount": "Qabul qilindi: {count}",
+  "@workLogsApprovedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "workLogsApprovedSkipped": "{approved} qabul qilindi, {skipped} o'tkazib yuborildi — ular allaqachon ko'rib chiqilgan",
+  "@workLogsApprovedSkipped": {
+    "placeholders": { "approved": { "type": "int" }, "skipped": { "type": "int" } }
+  },
+  "workLogsRejectedReason": "Sabab: {reason}",
+  "@workLogsRejectedReason": {
+    "placeholders": { "reason": { "type": "String" } }
+  }
+
 }
